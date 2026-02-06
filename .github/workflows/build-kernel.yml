@@ -1,3 +1,4 @@
+#test
 name: Build Kernel
 
 on:
@@ -40,8 +41,8 @@ jobs:
     - name: Download Clang Toolchain
       run: |
         mkdir clang
-        wget https://github.com/ZyCromerZ/Clang/releases/download/12.0.1-20230207-release/Clang-12.0.1-20230207.tar.gz
-        tar -C clang/ -zxvf Clang-12.0.1-20230207.tar.gz
+        wget https://github.com/ZyCromerZ/Clang/releases/download/17.0.0-20230725-release/Clang-17.0.0-20230725.tar.gz
+        tar -C clang/ -zxvf Clang-17.0.0-20230725.tar.gz
 
     - name: Download mkbootimg tools
       if: env.MAKE_BOOT_IMAGE == 'true'
