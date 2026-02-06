@@ -43,7 +43,7 @@ jobs:
         cd $GITHUB_WORKSPACE
         # Gunakan Clang versi yang lebih baru dengan support penuh
         wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
-        tar -zxvf android-ndk-r27c-linux.zip
+        unzip android-ndk-r27c-linux.zip
 
     - name: Download GCC Toolchain
       run: |
