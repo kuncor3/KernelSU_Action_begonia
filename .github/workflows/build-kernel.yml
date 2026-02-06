@@ -41,20 +41,14 @@ jobs:
     - name: Download Clang Toolchain
       run: |
         cd $GITHUB_WORKSPACE
-        mkdir clang
         # Gunakan Clang versi yang lebih baru dengan support penuh
-        wget https://github.com/ZyCromerZ/Clang/releases/download/18.0.0-20231012-release/Clang-18.0.0-20231012.tar.gz
-        tar -C clang/ -zxvf Clang-18.0.0-20231012.tar.gz
+        wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
+        tar -zxvf android-ndk-r27c-linux.zip
 
     - name: Download GCC Toolchain
       run: |
         cd $GITHUB_WORKSPACE
-        mkdir gcc-64
-        wget https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/+archive/refs/tags/android-12.1.0_r27.tar.gz -O gcc-aarch64.tar.gz
-        tar -C gcc-64/ -zxvf gcc-aarch64.tar.gz
-        mkdir gcc-32
-        wget https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/+archive/refs/tags/android-12.1.0_r27.tar.gz -O gcc-arm.tar.gz
-        tar -C gcc-32/ -zxvf gcc-arm.tar.gz
+        git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 --depth 1
 
     - name: Download mkbootimg tools
       if: env.MAKE_BOOT_IMAGE == 'true'
@@ -90,7 +84,7 @@ jobs:
     - name: Setup Configuration for Kernel
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        export PATH=$GITHUB_WORKSPACE/clang/bin:$GITHUB_WORKSPACE/gcc-64/bin:$GITHUB_WORKSPACE/gcc-32/bin:$PATH
+        export PATH=$GITHUB_WORKSPACE/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin:$GITHUB_WORKSPACE/toolchain-android/aarch64-linux-android-4.9/bin:$PATH
         export ARCH=${{ env.ARCH }}
         export SUBARCH=${{ env.ARCH }}
         export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
