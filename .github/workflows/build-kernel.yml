@@ -51,7 +51,6 @@ jobs:
         mkdir build && cd build
         ../configure --prefix=$GITHUB_WORKSPACE/custom-binutils \
                      --target=aarch64-linux-gnu \
-                     --enable-gold \
                      --enable-ld=default \
                      --enable-plugins \
                      --enable-shared \
