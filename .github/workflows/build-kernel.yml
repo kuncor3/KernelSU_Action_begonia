@@ -100,8 +100,8 @@ jobs:
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
         
         # Verifikasi binutils yang digunakan
-        which aarch64-linux-gnu-ld
-        aarch64-linux-gnu-ld --version
+        which ld
+        ld --version
         
         make -j$(nproc --all) O=out ARCH=${{ env.ARCH }} CC=clang CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-android- ${{ env.KERNEL_CONFIG }}
 
@@ -146,7 +146,7 @@ jobs:
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
         
         # Verifikasi lagi linker yang digunakan
-        which aarch64-linux-gnu-ld
+        which ld
         
         make -j$(nproc --all) O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-android- CLANG_TRIPLE=aarch64-linux-gnu- savedefconfig
         cp -f out/defconfig arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
