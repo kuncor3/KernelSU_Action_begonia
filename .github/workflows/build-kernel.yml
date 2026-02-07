@@ -42,10 +42,10 @@ jobs:
     - name: Build Custom Binutils
       run: |
         cd $GITHUB_WORKSPACE
-        # Download binutils 2.30 (versi sebelum perubahan behavior)
-        wget https://ftp.gnu.org/gnu/binutils/binutils-2.30.tar.xz
-        tar -xf binutils-2.30.tar.xz
-        cd binutils-2.30
+        # Download binutils 2.26 (versi sebelum perubahan behavior)
+        wget https://ftp.gnu.org/gnu/binutils/binutils-2.26.tar.gz
+        tar -xf binutils-2.26.tar.gz
+        cd binutils-2.26
 
         # Configure dan compile binutils
         mkdir build && cd build
