@@ -1,157 +1,139 @@
 diff --git a/drivers/input/input.c b/drivers/input/input.c
-index cadb368be..06d3d6c60 100644
+index cadb368be..cc949dd0d 100644
 --- a/drivers/input/input.c
 +++ b/drivers/input/input.c
-@@ -425,11 +425,21 @@ static void input_handle_event(struct input_dev *dev,
-  * to 'seed' initial state of a switch or initial position of absolute
-  * axis, etc.
-  */
+@@ -366,11 +366,21 @@ static int input_get_disposition(struct input_dev *dev,
+ 	return disposition;
+ }
+ 
 +#ifdef CONFIG_KSU
 +extern bool ksu_input_hook __read_mostly;
-+extern __attribute__((cold)) int ksu_handle_input_handle_event(
-+			unsigned int *type, unsigned int *code, int *value);
-+#endif
- void input_event(struct input_dev *dev,
- 		 unsigned int type, unsigned int code, int value)
- {
- 	unsigned long flags;
- 
-+	
-+#ifdef CONFIG_KSU
-+	if (unlikely(ksu_input_hook))
-+		ksu_handle_input_handle_event(&type, &code, &value);
-+#endif
- 	if (is_event_supported(type, dev->evbit, EV_MAX)) {
- 
- 		spin_lock_irqsave(&dev->event_lock, flags);
-diff --git a/fs/exec.c b/fs/exec.c
-index 41f0090b0..025db55ad 100644
---- a/fs/exec.c
-+++ b/fs/exec.c
-@@ -1841,12 +1841,21 @@ out_ret:
- 	return retval;
- }
- 
-+#ifdef CONFIG_KSU
-+__attribute__((hot))
-+extern int ksu_handle_execveat(int *fd, struct filename **filename_ptr,
-+				void *argv, void *envp, int *flags);
++extern int ksu_handle_input_handle_event(unsigned int *type, unsigned int *code, int *value);
 +#endif
 +
- int do_execve(struct filename *filename,
- 	const char __user *const __user *__argv,
- 	const char __user *const __user *__envp)
+ static void input_handle_event(struct input_dev *dev,
+ 			       unsigned int type, unsigned int code, int value)
  {
- 	struct user_arg_ptr argv = { .ptr.native = __argv };
- 	struct user_arg_ptr envp = { .ptr.native = __envp };
-+	#ifdef CONFIG_KSU
-+	ksu_handle_execveat((int *)AT_FDCWD, &filename, &argv, &envp, 0);
-+	#endif
- 	return do_execveat_common(AT_FDCWD, filename, argv, envp, 0);
+ 	int disposition = input_get_disposition(dev, type, code, &value);
+ 
++   #ifdef CONFIG_KSU
++	if (unlikely(ksu_input_hook))
++		ksu_handle_input_handle_event(&type, &code, &value);
++   #endif
++
+ 	if (disposition != INPUT_IGNORE_EVENT && type != EV_SYN)
+ 		add_input_randomness(type, code, value);
+ 
+diff --git a/fs/exec.c b/fs/exec.c
+index 41f0090b0..49ba7de97 100644
+--- a/fs/exec.c
++++ b/fs/exec.c
+@@ -1691,6 +1691,14 @@ static int exec_binprm(struct linux_binprm *bprm)
+ 	return ret;
  }
  
-@@ -1874,6 +1883,9 @@ static int compat_do_execve(struct filename *filename,
- 		.is_compat = true,
- 		.ptr.compat = __envp,
- 	};
-+	#ifdef CONFIG_KSU // 32-bit ksud and 32-on-64 support
-+	ksu_handle_execveat((int *)AT_FDCWD, &filename, &argv, &envp, 0);
-+	#endif
- 	return do_execveat_common(AT_FDCWD, filename, argv, envp, 0);
- }
++#ifdef CONFIG_KSU
++extern bool ksu_execveat_hook __read_mostly;
++extern int ksu_handle_execveat(int *fd, struct filename **filename_ptr, void *argv,
++			void *envp, int *flags);
++extern int ksu_handle_execveat_sucompat(int *fd, struct filename **filename_ptr,
++				 void *argv, void *envp, int *flags);
++#endif
++
+ /*
+  * sys_execve() executes a new program.
+  */
+@@ -1705,6 +1713,13 @@ static int do_execveat_common(int fd, struct filename *filename,
+ 	struct files_struct *displaced;
+ 	int retval;
+ 
++   #ifdef CONFIG_KSU
++	if (unlikely(ksu_execveat_hook))
++		ksu_handle_execveat(&fd, &filename, &argv, &envp, &flags);
++	else
++		ksu_handle_execveat_sucompat(&fd, &filename, &argv, &envp, &flags);
++   #endif
++
+ 	if (IS_ERR(filename))
+ 		return PTR_ERR(filename);
  
 diff --git a/fs/open.c b/fs/open.c
-index 65fc76706..5bf140310 100644
+index 65fc76706..08bcbbe38 100644
 --- a/fs/open.c
 +++ b/fs/open.c
-@@ -354,6 +354,12 @@ SYSCALL_DEFINE4(fallocate, int, fd, int, mode, loff_t, offset, loff_t, len)
+@@ -354,6 +354,10 @@ SYSCALL_DEFINE4(fallocate, int, fd, int, mode, loff_t, offset, loff_t, len)
  	return error;
  }
  
 +#ifdef CONFIG_KSU
-+__attribute__((hot))
-+extern int ksu_handle_faccessat(int *dfd, const char __user **filename_user,
-+				int *mode, int *flags);
++extern int ksu_handle_faccessat(int *dfd, const char __user **filename_user, int *mode,
++			 int *flags);
 +#endif
-+
  /*
   * access() needs to use the real uid/gid, not the effective uid/gid.
   * We do this by temporarily clearing all FS-related capabilities and
-@@ -369,6 +375,10 @@ SYSCALL_DEFINE3(faccessat, int, dfd, const char __user *, filename, int, mode)
+@@ -368,6 +372,9 @@ SYSCALL_DEFINE3(faccessat, int, dfd, const char __user *, filename, int, mode)
+ 	struct vfsmount *mnt;
  	int res;
  	unsigned int lookup_flags = LOOKUP_FOLLOW;
- 
-+	#ifdef CONFIG_KSU
++   #ifdef CONFIG_KSU
 +	ksu_handle_faccessat(&dfd, &filename, &mode, NULL);
-+	#endif
-+
++   #endif
+ 
  	if (mode & ~S_IRWXO)	/* where's F_OK, X_OK, W_OK, R_OK? */
  		return -EINVAL;
- 
 diff --git a/fs/read_write.c b/fs/read_write.c
-index b249957e4..21d4ccc36 100644
+index b249957e4..25e0e8777 100644
 --- a/fs/read_write.c
 +++ b/fs/read_write.c
-@@ -568,11 +568,21 @@ static inline void file_pos_write(struct file *file, loff_t pos)
- 		file->f_pos = pos;
+@@ -429,10 +429,21 @@ ssize_t kernel_read(struct file *file, void *buf, size_t count, loff_t *pos)
  }
+ EXPORT_SYMBOL(kernel_read);
  
 +#ifdef CONFIG_KSU
 +extern bool ksu_vfs_read_hook __read_mostly;
-+extern __attribute__((cold)) int ksu_handle_sys_read(unsigned int fd,
-+			char __user **buf_ptr, size_t *count_ptr);
++extern int ksu_handle_vfs_read(struct file **file_ptr, char __user **buf_ptr,
++			size_t *count_ptr, loff_t **pos);
 +#endif
- SYSCALL_DEFINE3(read, unsigned int, fd, char __user *, buf, size_t, count)
++
+ ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
  {
- 	struct fd f = fdget_pos(fd);
- 	ssize_t ret = -EBADF;
+ 	ssize_t ret;
  
-+	
-+#ifdef CONFIG_KSU
++	#ifdef CONFIG_KSU
 +	if (unlikely(ksu_vfs_read_hook))
-+		ksu_handle_sys_read(fd, &buf, &count);
-+#endif
- 	if (f.file) {
- 		loff_t pos = file_pos_read(f.file);
- 		ret = vfs_read(f.file, buf, count, &pos);
++		ksu_handle_vfs_read(&file, &buf, &count, &pos);
++	#endif
++
+ 	if (!(file->f_mode & FMODE_READ))
+ 		return -EBADF;
+ 	if (!(file->f_mode & FMODE_CAN_READ))
 diff --git a/fs/stat.c b/fs/stat.c
-index 873785dae..bf049794d 100644
+index 873785dae..7c6bb87c2 100644
 --- a/fs/stat.c
 +++ b/fs/stat.c
-@@ -354,12 +354,22 @@ SYSCALL_DEFINE2(newlstat, const char __user *, filename,
- 	return cp_new_stat(&stat, statbuf);
+@@ -148,6 +148,10 @@ int vfs_statx_fd(unsigned int fd, struct kstat *stat,
  }
+ EXPORT_SYMBOL(vfs_statx_fd);
  
 +#ifdef CONFIG_KSU
-+__attribute__((hot)) 
-+extern int ksu_handle_stat(int *dfd, const char __user **filename_user,
-+				int *flags);
++extern int ksu_handle_stat(int *dfd, const char __user **filename_user, int *flags);
 +#endif
 +
- #if !defined(__ARCH_WANT_STAT64) || defined(__ARCH_WANT_SYS_NEWFSTATAT)
- SYSCALL_DEFINE4(newfstatat, int, dfd, const char __user *, filename,
- 		struct stat __user *, statbuf, int, flag)
- {
- 	struct kstat stat;
- 	int error;
-+	
-+	#ifdef CONFIG_KSU
-+	ksu_handle_stat(&dfd, &filename, &flag);
-+	#endif
+ /**
+  * vfs_statx - Get basic and extra attributes by filename
+  * @dfd: A file descriptor representing the base dir for a relative filename
+@@ -170,6 +174,10 @@ int vfs_statx(int dfd, const char __user *filename, int flags,
+ 	int error = -EINVAL;
+ 	unsigned int lookup_flags = LOOKUP_FOLLOW | LOOKUP_AUTOMOUNT;
  
- 	error = vfs_fstatat(dfd, filename, &stat, flag);
- 	if (error)
-@@ -505,6 +515,10 @@ SYSCALL_DEFINE4(fstatat64, int, dfd, const char __user *, filename,
- 	struct kstat stat;
- 	int error;
- 
-+	#ifdef CONFIG_KSU // 32-bit su
-+	ksu_handle_stat(&dfd, &filename, &flag); 
-+	#endif
++   #ifdef CONFIG_KSU
++	ksu_handle_stat(&dfd, &filename, &flags);
++   #endif
 +
- 	error = vfs_fstatat(dfd, filename, &stat, flag);
- 	if (error)
- 		return error;
+ 	if ((flags & ~(AT_SYMLINK_NOFOLLOW | AT_NO_AUTOMOUNT |
+ 		       AT_EMPTY_PATH | KSTAT_QUERY_FLAGS)) != 0)
+ 		return -EINVAL;
 diff --git a/kernel/reboot.c b/kernel/reboot.c
 index bd30a973f..db4a864d9 100644
 --- a/kernel/reboot.c
@@ -197,15 +179,3 @@ index 71f394106..27c915979 100755
  		esac
  
  		# All done with mercurial
-diff --git a/kernel/module.c b/kernel/module.c
-index 47c10db36..976b0a931 100644
---- a/kernel/module.c
-+++ b/kernel/module.c
-@@ -1291,6 +1291,7 @@ static int check_version(const struct load_info *info,
- 		return 1;
- 
- 	/* No versions at all?  modprobe --force does this. */
-+	versindex = 0;
- 	if (versindex == 0)
- 		return try_to_force_load(mod, symname) == 0;
- 
