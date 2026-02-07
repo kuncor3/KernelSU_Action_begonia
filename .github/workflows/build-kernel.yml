@@ -61,7 +61,7 @@ jobs:
         
         # Verifikasi instalasi
         ls -la $GITHUB_WORKSPACE/custom-binutils/bin/
-        $GITHUB_WORKSPACE/custom-binutils/bin/aarch64-linux-gnu-ld --version
+        $GITHUB_WORKSPACE/custom-binutils/bin/ld --version
 
     - name: Download Clang Toolchain
       run: |
