@@ -35,33 +35,14 @@ jobs:
         echo "BUILD_TIME=$(TZ=Asia/Jakarta date "+%Y%m%d%H%M")" >> $GITHUB_ENV
         echo "DEVICE=$(echo ${{ env.KERNEL_CONFIG }} | sed 's!vendor/!!;s/_defconfig//;s/_user//;s/-perf//')" >> $GITHUB_ENV
         sudo apt-get update
-        sudo apt-get install git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 libncurses6 libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python3 python-is-python3 python2 texinfo gcc-9 g++-9
+        sudo apt-get install git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 libncurses6 libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python3 python3-dev swig python-is-python3 python2 texinfo
         mkdir -p $GITHUB_WORKSPACE/kernel_workspace
 
-  # Step baru: Compile binutils
-    - name: Build Custom Binutils
+    - name: Update dtc
       run: |
-        cd $GITHUB_WORKSPACE
+        cd $GITHUB_WORKSPACE/kernel_workspace
         # Download binutils 2.26 (versi sebelum perubahan behavior)
-        wget https://ftp.gnu.org/gnu/binutils/binutils-2.26.tar.gz
-        tar -xf binutils-2.26.tar.gz
-        cd binutils-2.26
-
-        # Configure dan compile binutils
-        gcc-9 -v
-        mkdir build && cd build
-        ../configure --prefix=$GITHUB_WORKSPACE/custom-binutils \
-                     --enable-ld \
-                     --enable-shared \
-                     --disable-werror \
-                     CC=gcc-9 CXX=g++-9
-
-        make -j$(nproc --all)
-        make install
-
-        # Verifikasi instalasi
-        ls -la $GITHUB_WORKSPACE/custom-binutils/bin/
-        $GITHUB_WORKSPACE/custom-binutils/bin/ld --version
+        git clone https://android.googlesource.com/platform/external/dtc
 
     - name: Download Clang Toolchain
       run: |
@@ -72,8 +53,6 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE
         git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9.git -b lineage-19.1
-#        ln -srvf android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/bin/aarch64-linux-android-ld \
-#                 android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/bin/ld
 
     - name: Download kernel source
       run: |
@@ -91,7 +70,8 @@ jobs:
     - name: Setup Configuration for Kernel
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        export PATH=$GITHUB_WORKSPACE/custom-binutils/bin:$GITHUB_WORKSPACE/android_prebuilts_clang_kernel_linux-x86_clang-r416183b/bin:$GITHUB_WORKSPACE/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/bin:$PATH
+        bash scripts/dtc/update-dtc-source.sh
+        export PATH=$GITHUB_WORKSPACE/android_prebuilts_clang_kernel_linux-x86_clang-r416183b/bin:$GITHUB_WORKSPACE/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/bin:$PATH
         export ARCH=${{ env.ARCH }}
         export SUBARCH=${{ env.ARCH }}
         export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
@@ -100,8 +80,6 @@ jobs:
 
         make -j$(nproc --all) \
          O=out ARCH=${{ env.ARCH }} \
-         LLVM=1 \
-         LD_LIBRARY_PATH=$GITHUB_WORKSPACE/android_prebuilts_clang_kernel_linux-x86_clang-r416183b/lib \
          CC=clang \
          CLANG_TRIPLE=aarch64-linux-gnu- \
          CROSS_COMPILE=aarch64-linux-android- ${{ env.KERNEL_CONFIG }}
@@ -138,7 +116,7 @@ jobs:
     - name: Build kernel
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        export PATH=$GITHUB_WORKSPACE/custom-binutils/bin:$GITHUB_WORKSPACE/android_prebuilts_clang_kernel_linux-x86_clang-r416183b/bin:$GITHUB_WORKSPACE/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/bin:$PATH
+        export PATH=$GITHUB_WORKSPACE/android_prebuilts_clang_kernel_linux-x86_clang-r416183b/bin:$GITHUB_WORKSPACE/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/bin:$PATH
         export ARCH=${{ env.ARCH }}
         export SUBARCH=${{ env.ARCH }}
         export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
@@ -148,7 +126,6 @@ jobs:
         make -j$(nproc --all) \
          O=out ARCH=arm64 \
          CC=clang \
-         LLVM=1 LD_LIBRARY_PATH=$GITHUB_WORKSPACE/android_prebuilts_clang_kernel_linux-x86_clang-r416183b/lib \
          CROSS_COMPILE=aarch64-linux-android- \
          CLANG_TRIPLE=aarch64-linux-gnu- savedefconfig
 
@@ -156,7 +133,6 @@ jobs:
 
         make -j$(nproc --all) \
          O=out ARCH=${{ env.ARCH }} \
-         LLVM=1 LD_LIBRARY_PATH=$GITHUB_WORKSPACE/android_prebuilts_clang_kernel_linux-x86_clang-r416183b/lib \
          CC=clang \
          CROSS_COMPILE=aarch64-linux-android- \
          CLANG_TRIPLE=aarch64-linux-gnu- ${{ env.BUILD_EXTRA_COMMAND }}
