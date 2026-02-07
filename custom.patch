@@ -1,0 +1,409 @@
+diff --git a/scripts/bloat-o-meter b/scripts/bloat-o-meter
+index a27677146..7141f522c 100755
+--- a/scripts/bloat-o-meter
++++ b/scripts/bloat-o-meter
+@@ -1,4 +1,4 @@
+-#!/usr/bin/python
++#!/opt/python2/bin/python
+ #
+ # Copyright 2004 Matt Mackall <mpm@selenic.com>
+ #
+diff --git a/scripts/diffconfig b/scripts/diffconfig
+index 89abf777f..36a184f93 100755
+--- a/scripts/diffconfig
++++ b/scripts/diffconfig
+@@ -1,4 +1,4 @@
+-#!/usr/bin/python
++#!/opt/python2/bin/python
+ # SPDX-License-Identifier: GPL-2.0
+ #
+ # diffconfig - a tool to compare .config files.
+diff --git a/scripts/dtc/dtc-lexer.l b/scripts/dtc/dtc-lexer.l
+index fd825ebba..f57c9a7e8 100644
+--- a/scripts/dtc/dtc-lexer.l
++++ b/scripts/dtc/dtc-lexer.l
+@@ -38,7 +38,7 @@ LINECOMMENT	"//".*\n
+ #include "srcpos.h"
+ #include "dtc-parser.tab.h"
+ 
+-YYLTYPE yylloc;
++extern YYLTYPE yylloc;
+ extern bool treesource_error;
+ 
+ /* CAUTION: this will stop working if we ever use yyless() or yyunput() */
+diff --git a/scripts/dtc/dtc-lexer.lex.c_shipped b/scripts/dtc/dtc-lexer.lex.c_shipped
+index 64c243772..fa93d2398 100644
+--- a/scripts/dtc/dtc-lexer.lex.c_shipped
++++ b/scripts/dtc/dtc-lexer.lex.c_shipped
+@@ -631,7 +631,7 @@ char *yytext;
+ #include "srcpos.h"
+ #include "dtc-parser.tab.h"
+ 
+-YYLTYPE yylloc;
++extern YYLTYPE yylloc;
+ extern bool treesource_error;
+ 
+ /* CAUTION: this will stop working if we ever use yyless() or yyunput() */
+diff --git a/scripts/show_delta b/scripts/show_delta
+index 5b365009e..cd9ee12ea 100755
+--- a/scripts/show_delta
++++ b/scripts/show_delta
+@@ -1,4 +1,4 @@
+-#!/usr/bin/python
++#!/opt/python2/bin/python
+ #
+ # show_deltas: Read list of printk messages instrumented with
+ # time data, and format with time deltas.
+diff --git a/scripts/tracing/draw_functrace.py b/scripts/tracing/draw_functrace.py
+index db40fa04c..ccd468ef8 100755
+--- a/scripts/tracing/draw_functrace.py
++++ b/scripts/tracing/draw_functrace.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/python
++#!/opt/python2/bin/python
+ 
+ """
+ Copyright 2008 (c) Frederic Weisbecker <fweisbec@gmail.com>
+diff --git a/tools/dct/DrvGen.py b/tools/dct/DrvGen.py
+index c7bd34f14..9a6e8d905 100755
+--- a/tools/dct/DrvGen.py
++++ b/tools/dct/DrvGen.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (C) 2016 MediaTek Inc.
+diff --git a/tools/dct/data/ClkData.py b/tools/dct/data/ClkData.py
+index bfeefe7c2..204ccc953 100755
+--- a/tools/dct/data/ClkData.py
++++ b/tools/dct/data/ClkData.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (C) 2016 MediaTek Inc.
+diff --git a/tools/dct/data/EintData.py b/tools/dct/data/EintData.py
+index 53d981476..2c988204e 100755
+--- a/tools/dct/data/EintData.py
++++ b/tools/dct/data/EintData.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (C) 2016 MediaTek Inc.
+diff --git a/tools/dct/data/GpioData.py b/tools/dct/data/GpioData.py
+index 8363318bc..bdfb65eee 100755
+--- a/tools/dct/data/GpioData.py
++++ b/tools/dct/data/GpioData.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (C) 2016 MediaTek Inc.
+diff --git a/tools/dct/data/I2cData.py b/tools/dct/data/I2cData.py
+index 6bb1d72ff..ee284f9e7 100755
+--- a/tools/dct/data/I2cData.py
++++ b/tools/dct/data/I2cData.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (C) 2016 MediaTek Inc.
+diff --git a/tools/dct/data/KpdData.py b/tools/dct/data/KpdData.py
+index e0f4c989e..f12360007 100755
+--- a/tools/dct/data/KpdData.py
++++ b/tools/dct/data/KpdData.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (C) 2016 MediaTek Inc.
+diff --git a/tools/dct/data/Md1EintData.py b/tools/dct/data/Md1EintData.py
+index e66fa0976..932919562 100755
+--- a/tools/dct/data/Md1EintData.py
++++ b/tools/dct/data/Md1EintData.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (C) 2016 MediaTek Inc.
+diff --git a/tools/dct/data/PmicData.py b/tools/dct/data/PmicData.py
+index 8674ca804..e6c584b73 100755
+--- a/tools/dct/data/PmicData.py
++++ b/tools/dct/data/PmicData.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (C) 2016 MediaTek Inc.
+diff --git a/tools/dct/data/PowerData.py b/tools/dct/data/PowerData.py
+index d8b44136e..4a8fc26af 100755
+--- a/tools/dct/data/PowerData.py
++++ b/tools/dct/data/PowerData.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (C) 2016 MediaTek Inc.
+diff --git a/tools/dct/obj/AdcObj.py b/tools/dct/obj/AdcObj.py
+index 28e6dfb02..64a7256f0 100755
+--- a/tools/dct/obj/AdcObj.py
++++ b/tools/dct/obj/AdcObj.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (C) 2016 MediaTek Inc.
+diff --git a/tools/dct/obj/ChipObj.py b/tools/dct/obj/ChipObj.py
+index 0b0b7f83b..f519251d1 100755
+--- a/tools/dct/obj/ChipObj.py
++++ b/tools/dct/obj/ChipObj.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (C) 2016 MediaTek Inc.
+diff --git a/tools/dct/obj/ClkObj.py b/tools/dct/obj/ClkObj.py
+index ed102372b..802a312aa 100755
+--- a/tools/dct/obj/ClkObj.py
++++ b/tools/dct/obj/ClkObj.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (C) 2016 MediaTek Inc.
+diff --git a/tools/dct/obj/EintObj.py b/tools/dct/obj/EintObj.py
+index 961e31152..446a3cec1 100755
+--- a/tools/dct/obj/EintObj.py
++++ b/tools/dct/obj/EintObj.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (C) 2016 MediaTek Inc.
+diff --git a/tools/dct/obj/GpioObj.py b/tools/dct/obj/GpioObj.py
+index 03375adba..8367ccee5 100755
+--- a/tools/dct/obj/GpioObj.py
++++ b/tools/dct/obj/GpioObj.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (C) 2016 MediaTek Inc.
+diff --git a/tools/dct/obj/I2cObj.py b/tools/dct/obj/I2cObj.py
+index 1d73e2716..debe21c1e 100755
+--- a/tools/dct/obj/I2cObj.py
++++ b/tools/dct/obj/I2cObj.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (C) 2016 MediaTek Inc.
+diff --git a/tools/dct/obj/KpdObj.py b/tools/dct/obj/KpdObj.py
+index 6dae46f25..499aa02f0 100755
+--- a/tools/dct/obj/KpdObj.py
++++ b/tools/dct/obj/KpdObj.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (C) 2016 MediaTek Inc.
+diff --git a/tools/dct/obj/Md1EintObj.py b/tools/dct/obj/Md1EintObj.py
+index 30044c434..b9dcb45d7 100755
+--- a/tools/dct/obj/Md1EintObj.py
++++ b/tools/dct/obj/Md1EintObj.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (C) 2016 MediaTek Inc.
+diff --git a/tools/dct/obj/ModuleObj.py b/tools/dct/obj/ModuleObj.py
+index 687e26f05..7a5194da7 100755
+--- a/tools/dct/obj/ModuleObj.py
++++ b/tools/dct/obj/ModuleObj.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (C) 2016 MediaTek Inc.
+diff --git a/tools/dct/obj/PmicObj.py b/tools/dct/obj/PmicObj.py
+index 2414c00bd..6b1b461d2 100755
+--- a/tools/dct/obj/PmicObj.py
++++ b/tools/dct/obj/PmicObj.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (C) 2016 MediaTek Inc.
+diff --git a/tools/dct/obj/PowerObj.py b/tools/dct/obj/PowerObj.py
+index 6cff9bf5d..959f99569 100755
+--- a/tools/dct/obj/PowerObj.py
++++ b/tools/dct/obj/PowerObj.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (C) 2016 MediaTek Inc.
+diff --git a/tools/dct/utility/util.py b/tools/dct/utility/util.py
+index 8c0b16e17..ce97232d8 100755
+--- a/tools/dct/utility/util.py
++++ b/tools/dct/utility/util.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (C) 2016 MediaTek Inc.
+diff --git a/tools/dct/utility/version.py b/tools/dct/utility/version.py
+index 71fb98860..238ef2b9e 100755
+--- a/tools/dct/utility/version.py
++++ b/tools/dct/utility/version.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (C) 2016 MediaTek Inc.
+diff --git a/tools/kvm/kvm_stat/kvm_stat b/tools/kvm/kvm_stat/kvm_stat
+index c0d653d36..41b2daaa7 100755
+--- a/tools/kvm/kvm_stat/kvm_stat
++++ b/tools/kvm/kvm_stat/kvm_stat
+@@ -1,4 +1,4 @@
+-#!/usr/bin/python
++#!/opt/python2/bin/python
+ #
+ # top-like utility for displaying kvm statistics
+ #
+diff --git a/tools/perf/python/tracepoint.py b/tools/perf/python/tracepoint.py
+index eb76f6516..8f0351511 100755
+--- a/tools/perf/python/tracepoint.py
++++ b/tools/perf/python/tracepoint.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # SPDX-License-Identifier: GPL-2.0
+ # -*- python -*-
+ # -*- coding: utf-8 -*-
+diff --git a/tools/perf/python/twatch.py b/tools/perf/python/twatch.py
+index c235c22b1..c53b79e55 100755
+--- a/tools/perf/python/twatch.py
++++ b/tools/perf/python/twatch.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # -*- python -*-
+ # -*- coding: utf-8 -*-
+ #   twatch - Experimental use of the perf python interface
+diff --git a/tools/perf/scripts/python/call-graph-from-sql.py b/tools/perf/scripts/python/call-graph-from-sql.py
+index b494a67a1..f97fe62e3 100644
+--- a/tools/perf/scripts/python/call-graph-from-sql.py
++++ b/tools/perf/scripts/python/call-graph-from-sql.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/python2
++#!/opt/python2/bin/python2
+ # call-graph-from-sql.py: create call-graph from sql database
+ # Copyright (c) 2014-2017, Intel Corporation.
+ #
+diff --git a/tools/perf/scripts/python/export-to-postgresql.py b/tools/perf/scripts/python/export-to-postgresql.py
+index e46f51b17..7a1421856 100644
+--- a/tools/perf/scripts/python/export-to-postgresql.py
++++ b/tools/perf/scripts/python/export-to-postgresql.py
+@@ -171,7 +171,7 @@ import datetime
+ #		SELECT * FROM samples_view WHERE event = 'transactions' AND branch_type_name = 'transaction abort';
+ #
+ # To print a call stack requires walking the call_paths table.  For example this python script:
+-#   #!/usr/bin/python2
++#   #!/opt/python2/bin/python2
+ #
+ #   import sys
+ #   from PySide.QtSql import *
+diff --git a/tools/perf/scripts/python/sched-migration.py b/tools/perf/scripts/python/sched-migration.py
+index de66cb3b7..14892893f 100644
+--- a/tools/perf/scripts/python/sched-migration.py
++++ b/tools/perf/scripts/python/sched-migration.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/python
++#!/opt/python2/bin/python
+ #
+ # Cpu task migration overview toy
+ #
+diff --git a/tools/perf/tests/attr.py b/tools/perf/tests/attr.py
+index 44090a9a1..9153367dd 100644
+--- a/tools/perf/tests/attr.py
++++ b/tools/perf/tests/attr.py
+@@ -1,4 +1,4 @@
+-#! /usr/bin/python
++#! /opt/python2/bin/python
+ # SPDX-License-Identifier: GPL-2.0
+ 
+ import os
+diff --git a/tools/perf/util/setup.py b/tools/perf/util/setup.py
+index 23f1bf175..920672cb9 100644
+--- a/tools/perf/util/setup.py
++++ b/tools/perf/util/setup.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/python2
++#!/opt/python2/bin/python2
+ 
+ from os import getenv
+ 
+diff --git a/tools/power/pm-graph/analyze_boot.py b/tools/power/pm-graph/analyze_boot.py
+index e83df141a..0ac0fdd82 100755
+--- a/tools/power/pm-graph/analyze_boot.py
++++ b/tools/power/pm-graph/analyze_boot.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/python
++#!/opt/python2/bin/python
+ #
+ # Tool for analyzing boot timing
+ # Copyright (c) 2013, Intel Corporation.
+diff --git a/tools/power/pm-graph/analyze_suspend.py b/tools/power/pm-graph/analyze_suspend.py
+index 1b60fe203..5aa7836ae 100755
+--- a/tools/power/pm-graph/analyze_suspend.py
++++ b/tools/power/pm-graph/analyze_suspend.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/python
++#!/opt/python2/bin/python
+ #
+ # Tool for analyzing suspend/resume timing
+ # Copyright (c) 2013, Intel Corporation.
+diff --git a/tools/power/x86/intel_pstate_tracer/intel_pstate_tracer.py b/tools/power/x86/intel_pstate_tracer/intel_pstate_tracer.py
+index 0b24dd9d0..2ad3c9230 100755
+--- a/tools/power/x86/intel_pstate_tracer/intel_pstate_tracer.py
++++ b/tools/power/x86/intel_pstate_tracer/intel_pstate_tracer.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/python
++#!/opt/python2/bin/python
+ # -*- coding: utf-8 -*-
+ #
+ """ This utility can be used to debug and tune the performance of the
+diff --git a/tools/testing/selftests/tc-testing/tdc_batch.py b/tools/testing/selftests/tc-testing/tdc_batch.py
+index 707c6bfef..fc18e60b0 100755
+--- a/tools/testing/selftests/tc-testing/tdc_batch.py
++++ b/tools/testing/selftests/tc-testing/tdc_batch.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/python3
++#!/opt/python2/bin/python3
+ 
+ """
+ tdc_batch.py - a script to generate TC batch file

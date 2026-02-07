@@ -68,8 +68,8 @@ jobs:
         curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s legacy
         KSU_VERSION="legacy"
         echo "UPLOADNAME=-KernelSU_$KSU_VERSION" >> $GITHUB_ENV
-        patch -p1 < $GITHUB_WORKSPACE/manual_syscall_hook_patch.patch
-        bash $GITHUB_WORKSPACE/patches.sh
+        patch -p1 < $GITHUB_WORKSPACE/ksu_manual_hook.patch
+        patch -p1 < $GITHUB_WORKSPACE/custom.patch
 
 
     - name: Setup Configuration for Kernel
