@@ -127,18 +127,17 @@ jobs:
            echo "DTBO image is empty"
        fi
 
-    - name: Archive kernel
+    - name: Prepare kernel files
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot
         cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/.config kernel-config.txt
-        tar czf $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/Kernel.tar.gz \
-          ${{ env.KERNEL_FILE }} \
-          mtk.dtb \
-          kernel-config.txt
 
     - name: Upload Kernel
       if: env.CHECK_FILE_IS_OK == 'true'
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.KERNEL_FILE }}${{ env.UPLOADNAME }}-${{ env.DEVICE }}-${{ env.BUILD_TIME }}
-        path: kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/Kernel.tar.gz
+        path: |
+          kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }}
+          kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/mtk.dtb
+          kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/kernel-config.txt
