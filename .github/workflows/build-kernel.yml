@@ -72,6 +72,7 @@ jobs:
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         sed -i 's/^make/make NO_PYTHON=1/g' scripts/dtc/update-dtc-source.sh
         sed -i 's/^git commit \-e/\#git commit \-e/g' scripts/dtc/update-dtc-source.sh
+        sed -i 's/last_dtc_ver\}\.\./last_dtc_ver\}/g' scripts/dtc/update-dtc-source.sh
         bash scripts/dtc/update-dtc-source.sh
         export PATH=$GITHUB_WORKSPACE/android_prebuilts_clang_kernel_linux-x86_clang-r416183b/bin:$GITHUB_WORKSPACE/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/bin:$PATH
         export ARCH=${{ env.ARCH }}
