@@ -38,6 +38,28 @@ jobs:
         sudo apt-get install git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 libncurses6 libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python3 python-is-python3 python2 texinfo
         mkdir -p $GITHUB_WORKSPACE/kernel_workspace
 
+  # Step baru: Compile binutils
+    - name: Build Custom Binutils
+      run: |
+        cd $GITHUB_WORKSPACE
+        # Download binutils 2.30 (versi sebelum perubahan behavior)
+        wget https://ftp.gnu.org/gnu/binutils/binutils-2.30.tar.xz
+        tar -xf binutils-2.30.tar.xz
+        cd binutils-2.30
+
+        # Configure dan compile binutils
+        mkdir build && cd build
+        ../configure --prefix=$GITHUB_WORKSPACE/custom-binutils \
+                     --enable-ld \
+                     --enable-shared
+
+        make -j$(nproc --all)
+        make install
+
+        # Verifikasi instalasi
+        ls -la $GITHUB_WORKSPACE/custom-binutils/bin/
+        $GITHUB_WORKSPACE/custom-binutils/bin/ld --version
+
     - name: Download Clang Toolchain
       run: |
         cd $GITHUB_WORKSPACE
@@ -66,7 +88,7 @@ jobs:
     - name: Setup Configuration for Kernel
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        export PATH=$GITHUB_WORKSPACE/android_prebuilts_clang_kernel_linux-x86_clang-r416183b/bin:$GITHUB_WORKSPACE/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/bin:$PATH
+        export PATH=$GITHUB_WORKSPACE/custom-binutils/bin:$GITHUB_WORKSPACE/android_prebuilts_clang_kernel_linux-x86_clang-r416183b/bin:$GITHUB_WORKSPACE/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/bin:$PATH
         export ARCH=${{ env.ARCH }}
         export SUBARCH=${{ env.ARCH }}
         export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
@@ -113,7 +135,7 @@ jobs:
     - name: Build kernel
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        export PATH=$GITHUB_WORKSPACE/android_prebuilts_clang_kernel_linux-x86_clang-r416183b/bin:$GITHUB_WORKSPACE/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/bin:$PATH
+        export PATH=$GITHUB_WORKSPACE/custom-binutils/bin:$GITHUB_WORKSPACE/android_prebuilts_clang_kernel_linux-x86_clang-r416183b/bin:$GITHUB_WORKSPACE/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/bin:$PATH
         export ARCH=${{ env.ARCH }}
         export SUBARCH=${{ env.ARCH }}
         export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
