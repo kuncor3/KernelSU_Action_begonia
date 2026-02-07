@@ -53,6 +53,7 @@ jobs:
         ../configure --prefix=$GITHUB_WORKSPACE/custom-binutils \
                      --enable-ld \
                      --enable-shared \
+                     --disable-werror \
                      CC=gcc-9 CXX=g++-9
 
         make -j$(nproc --all)
