@@ -407,15 +407,4 @@ index 707c6bfef..fc18e60b0 100755
  
  """
  tdc_batch.py - a script to generate TC batch file
-diff --git a/kernel/module.c b/kernel/module.c
-index 47c10db36..976b0a931 100644
---- a/kernel/module.c
-+++ b/kernel/module.c
-@@ -1291,6 +1291,7 @@ static int check_version(const struct load_info *info,
- 		return 1;
- 
- 	/* No versions at all?  modprobe --force does this. */
-+	versindex = 0;
- 	if (versindex == 0)
- 		return try_to_force_load(mod, symname) == 0;
  
