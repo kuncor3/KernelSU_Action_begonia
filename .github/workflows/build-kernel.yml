@@ -47,7 +47,10 @@ jobs:
     - name: Download Clang Toolchain
       run: |
         cd $GITHUB_WORKSPACE
-        git clone https://github.com/LineageOS/android_prebuilts_clang_kernel_linux-x86_clang-r416183b.git -b lineage-20.0
+        mkdir clang-android
+        cd clang-android
+        wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/emu-29.0-release/clang-r353983c.tar.gz
+        tar xfv clang-r353983c.tar.gz
 
     - name: Download GCC Toolchain
       run: |
@@ -70,11 +73,11 @@ jobs:
     - name: Setup Configuration for Kernel
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        sed -i 's/^make/make NO_PYTHON=1/g' scripts/dtc/update-dtc-source.sh
-        sed -i 's/^git commit \-e/\#git commit \-e/g' scripts/dtc/update-dtc-source.sh
-        sed -i 's/last_dtc_ver\}\.\./last_dtc_ver\}/g' scripts/dtc/update-dtc-source.sh
-        bash scripts/dtc/update-dtc-source.sh
-        export PATH=$GITHUB_WORKSPACE/android_prebuilts_clang_kernel_linux-x86_clang-r416183b/bin:$GITHUB_WORKSPACE/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/bin:$PATH
+#        sed -i 's/^make/make NO_PYTHON=1/g' scripts/dtc/update-dtc-source.sh
+#        sed -i 's/^git commit \-e/\#git commit \-e/g' scripts/dtc/update-dtc-source.sh
+#        sed -i 's/last_dtc_ver\}\.\./last_dtc_ver\}/g' scripts/dtc/update-dtc-source.sh
+#        bash scripts/dtc/update-dtc-source.sh
+        export PATH=$GITHUB_WORKSPACE/clang-android/bin:$GITHUB_WORKSPACE/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/bin:$PATH
         export ARCH=${{ env.ARCH }}
         export SUBARCH=${{ env.ARCH }}
         export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
@@ -119,11 +122,11 @@ jobs:
     - name: Build kernel
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        export PATH=$GITHUB_WORKSPACE/android_prebuilts_clang_kernel_linux-x86_clang-r416183b/bin:$GITHUB_WORKSPACE/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/bin:$PATH
+        export PATH=$GITHUB_WORKSPACE/clang-android/bin:$GITHUB_WORKSPACE/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/bin:$PATH
         export ARCH=${{ env.ARCH }}
         export SUBARCH=${{ env.ARCH }}
         export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
-        export KBUILD_BUILD_HOST=WuxinBuilds
+        export KBUILD_BUILD_HOST=7i
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
 
         make -j$(nproc --all) \
