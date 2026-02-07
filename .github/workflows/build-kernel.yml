@@ -1,4 +1,3 @@
-#test
 name: Build Kernel
 
 on:
@@ -137,7 +136,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.KERNEL_FILE }}${{ env.UPLOADNAME }}-${{ env.DEVICE }}-${{ env.BUILD_TIME }}
-        path: |
-          kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }}
-          kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/mtk.dtb
-          kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/kernel-config.txt
+        path: kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/
