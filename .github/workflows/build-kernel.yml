@@ -38,31 +38,6 @@ jobs:
         sudo apt-get install git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 libncurses6 libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python3 python-is-python3 python2 texinfo
         mkdir -p $GITHUB_WORKSPACE/kernel_workspace
 
-    # Step baru: Compile binutils versi lawas
-    - name: Build Custom Binutils
-      run: |
-        cd $GITHUB_WORKSPACE
-        # Download binutils 2.30 (versi sebelum perubahan behavior)
-        wget https://ftp.gnu.org/gnu/binutils/binutils-2.30.tar.xz
-        tar -xf binutils-2.30.tar.xz
-        cd binutils-2.30
-        
-        # Configure dan compile binutils
-        mkdir build && cd build
-        ../configure --prefix=$GITHUB_WORKSPACE/custom-binutils \
-                     --enable-ld=default \
-                     --enable-plugins \
-                     --enable-shared \
-                     --disable-werror \
-                     --with-sysroot
-        
-        make -j$(nproc --all)
-        make install
-        
-        # Verifikasi instalasi
-        ls -la $GITHUB_WORKSPACE/custom-binutils/bin/
-        $GITHUB_WORKSPACE/custom-binutils/bin/ld --version
-
     - name: Download Clang Toolchain
       run: |
         cd $GITHUB_WORKSPACE
@@ -92,17 +67,12 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         # Tambahkan custom binutils ke PATH (PENTING: taruh di AWAL PATH)
-        export PATH=$GITHUB_WORKSPACE/custom-binutils/bin:$GITHUB_WORKSPACE/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin:$GITHUB_WORKSPACE/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/bin:$PATH
+        export PATH=$GITHUB_WORKSPACE/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin:$GITHUB_WORKSPACE/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/bin:$PATH
         export ARCH=${{ env.ARCH }}
         export SUBARCH=${{ env.ARCH }}
         export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
         export KBUILD_BUILD_HOST=7i
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
-        
-        # Verifikasi binutils yang digunakan
-        which ld
-        ld --version
-        
         make -j$(nproc --all) O=out ARCH=${{ env.ARCH }} CC=clang CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-android- ${{ env.KERNEL_CONFIG }}
 
         if [ ${{ env.APPLY_KSU_PATCH }} = true ]; then
@@ -138,16 +108,12 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         # Tambahkan custom binutils ke PATH (PENTING: taruh di AWAL PATH)
-        export PATH=$GITHUB_WORKSPACE/custom-binutils/bin:$GITHUB_WORKSPACE/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin:$GITHUB_WORKSPACE/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/bin:$PATH
+        export PATH=$GITHUB_WORKSPACE/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin:$GITHUB_WORKSPACE/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/bin:$PATH
         export ARCH=${{ env.ARCH }}
         export SUBARCH=${{ env.ARCH }}
         export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
         export KBUILD_BUILD_HOST=WuxinBuilds
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
-        
-        # Verifikasi lagi linker yang digunakan
-        which ld
-        
         make -j$(nproc --all) O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-android- CLANG_TRIPLE=aarch64-linux-gnu- savedefconfig
         cp -f out/defconfig arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         make -j$(nproc --all) O=out ARCH=${{ env.ARCH }} CC=clang CROSS_COMPILE=aarch64-linux-android- CLANG_TRIPLE=aarch64-linux-gnu- ${{ env.BUILD_EXTRA_COMMAND }}
