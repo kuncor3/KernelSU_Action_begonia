@@ -79,6 +79,7 @@ jobs:
         cp -r mtk_connectivity_module/* vendor/mediatek/kernel_modules/connectivity
         ln -srv vendor drivers
         ln -srv vendor drivers/misc
+        ln -srv vendor ../
 
     - name: Setup Configuration for Kernel
       run: |
