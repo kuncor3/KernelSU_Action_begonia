@@ -138,6 +138,7 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot
         cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/.config kernel-config.txt
+        find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out -type f -name "*.ko" | while read file; do cp -rv $file .; done
 
     - name: Upload Kernel
       if: env.CHECK_FILE_IS_OK == 'true'
