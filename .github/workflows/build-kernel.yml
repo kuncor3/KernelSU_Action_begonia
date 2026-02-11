@@ -76,10 +76,7 @@ jobs:
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         git clone https://github.com/rsuntkOrgs/mtk_connectivity_module.git -b staging-4.14
         mkdir -p vendor/mediatek/kernel_modules/connectivity/
-        cp -r mtk_connectivity_module/* vendor/mediatek/kernel_modules/connectivity
-        ln -srv vendor drivers
-        ln -srv vendor drivers/misc
-        ln -srv vendor ../
+        cp -r mtk_connectivity_module/* drivers/misc/mediatek/connectivity
 
     - name: Setup Configuration for Kernel
       run: |
@@ -90,7 +87,7 @@ jobs:
         export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
         export KBUILD_BUILD_HOST=7i
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
-        export CONFIG_WLAN_DRV_BUILD_IN=y
+        export CONFIG_DRV_BUILD_IN=y
 
         make -j$(nproc --all) \
          O=out ARCH=${{ env.ARCH }} \
@@ -107,7 +104,7 @@ jobs:
         export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
         export KBUILD_BUILD_HOST=7i
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
-        export CONFIG_WLAN_DRV_BUILD_IN=y
+        export CONFIG_DRV_BUILD_IN=y
 
         make -j$(nproc --all) \
          O=out ARCH=arm64 \
