@@ -89,7 +89,6 @@ jobs:
         make -j$(nproc --all) \
          O=out ARCH=${{ env.ARCH }} \
          CC=clang \
-         CLANG_TRIPLE=aarch64-linux-gnu- \
          CROSS_COMPILE=aarch64-linux-android- ${{ env.KERNEL_CONFIG }}
 
     - name: Build kernel
@@ -105,16 +104,14 @@ jobs:
         make -j$(nproc --all) \
          O=out ARCH=arm64 \
          CC=clang \
-         CROSS_COMPILE=aarch64-linux-android- \
-         CLANG_TRIPLE=aarch64-linux-gnu- savedefconfig
+         CROSS_COMPILE=aarch64-linux-android- savedefconfig
 
         cp -f out/defconfig arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
 
         make -j$(nproc --all) \
          O=out ARCH=${{ env.ARCH }} \
          CC=clang \
-         CROSS_COMPILE=aarch64-linux-android- \
-         CLANG_TRIPLE=aarch64-linux-gnu- ${{ env.BUILD_EXTRA_COMMAND }}
+         CROSS_COMPILE=aarch64-linux-android- ${{ env.BUILD_EXTRA_COMMAND }}
 
     - name: Check a kernel output files
       run: |
