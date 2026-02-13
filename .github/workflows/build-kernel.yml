@@ -74,11 +74,11 @@ jobs:
 
     - name: Setup Configuration for Kernel
       run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         if [ ${{ env.APPLY_CUSTOM_PATCH }} = true ] && [ -f $GITHUB_WORKSPACE/custom.patch ]; then
            patch -p1 < $GITHUB_WORKSPACE/custom.patch
         fi
 
-        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         export PATH=$GITHUB_WORKSPACE/clang-android/bin:$GITHUB_WORKSPACE/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/bin:$PATH
         export ARCH=${{ env.ARCH }}
         export SUBARCH=${{ env.ARCH }}
