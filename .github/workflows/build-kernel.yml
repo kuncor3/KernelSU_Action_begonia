@@ -83,10 +83,12 @@ jobs:
         export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
         export KBUILD_BUILD_HOST=ubuntu
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
+        export DTC_EXT=dtc
 
         make -j$(nproc --all) \
          O=out ARCH=${{ env.ARCH }} \
          CC=clang \
+         LOCALVERSION=-perf \
          LLVM=1 \
          CLANG_TRIPLE=aarch64-linux-gnu- \
          CROSS_COMPILE=aarch64-linux-android- ${{ env.KERNEL_CONFIG }}
@@ -100,10 +102,12 @@ jobs:
         export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
         export KBUILD_BUILD_HOST=ubuntu
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
+        export DTC_EXT=dtc
 
         make -j$(nproc --all) \
          O=out ARCH=arm64 \
          CC=clang \
+         LOCALVERSION=-perf \
          LLVM=1 \
          CLANG_TRIPLE=aarch64-linux-gnu- \
          CROSS_COMPILE=aarch64-linux-android- savedefconfig
@@ -113,6 +117,7 @@ jobs:
         make -j$(nproc --all) \
          O=out ARCH=${{ env.ARCH }} \
          CC=clang \
+         LOCALVERSION=-perf \
          LLVM=1 \
          CLANG_TRIPLE=aarch64-linux-gnu- \
          CROSS_COMPILE=aarch64-linux-android- ${{ env.BUILD_EXTRA_COMMAND }}
