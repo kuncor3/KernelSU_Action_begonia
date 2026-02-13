@@ -46,7 +46,6 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE
         git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b ndk-release-r23 gcc-android
-        ./gcc-android/bin/aarch64-linux-android-gcc -v
 
     - name: Download kernel source
       run: |
