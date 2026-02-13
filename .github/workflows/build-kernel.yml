@@ -39,9 +39,7 @@ jobs:
     - name: Download Clang Toolchain
       run: |
         cd $GITHUB_WORKSPACE
-        wget https://dl.google.com/android/repository/android-ndk-r27d-linux.zip
-        unzip android-ndk-r27d-linux.zip
-        ln -sv android-ndk-r27d/toolchains/llvm/prebuilt/linux-x86_64 clang-android
+        git clone https://github.com/LineageOS/android_prebuilts_clang_kernel_linux-x86_clang-r416183b.git -b lineage-20.0 clang-android
 
     - name: Download GCC Toolchain
       run: |
@@ -89,6 +87,8 @@ jobs:
         make -j$(nproc --all) \
          O=out ARCH=${{ env.ARCH }} \
          CC=clang \
+         LLVM=1 \
+         CLANG_TRIPLE=aarch64-linux-gnu- \
          CROSS_COMPILE=aarch64-linux-android- ${{ env.KERNEL_CONFIG }}
 
     - name: Build kernel
@@ -104,6 +104,8 @@ jobs:
         make -j$(nproc --all) \
          O=out ARCH=arm64 \
          CC=clang \
+         LLVM=1 \
+         CLANG_TRIPLE=aarch64-linux-gnu- \
          CROSS_COMPILE=aarch64-linux-android- savedefconfig
 
         cp -f out/defconfig arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
@@ -111,6 +113,8 @@ jobs:
         make -j$(nproc --all) \
          O=out ARCH=${{ env.ARCH }} \
          CC=clang \
+         LLVM=1 \
+         CLANG_TRIPLE=aarch64-linux-gnu- \
          CROSS_COMPILE=aarch64-linux-android- ${{ env.BUILD_EXTRA_COMMAND }}
 
     - name: Check a kernel output files
