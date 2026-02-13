@@ -39,9 +39,9 @@ jobs:
     - name: Download Clang Toolchain
       run: |
         cd $GITHUB_WORKSPACE
-        mkdir clang-android
-        wget https://github.com/ZyCromerZ/Clang/releases/download/22.0.0git-20250924-release/Clang-22.0.0git-20250924.tar.gz
-        tar -C clang-android/ -zxvf Clang-22.0.0git-20250924.tar.gz
+        wget https://dl.google.com/android/repository/android-ndk-r27d-linux.zip
+        unzip android-ndk-r27d-linux.zip
+        ln -sv android-ndk-r27d/toolchains/llvm/prebuilt/linux-x86_64 clang-android
 
     - name: Download GCC Toolchain
       run: |
