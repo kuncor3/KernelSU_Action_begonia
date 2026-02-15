@@ -37,12 +37,6 @@ jobs:
         sudo apt-get install git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 libncurses6 libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python3 python3-dev swig python-is-python3 python2 texinfo
         mkdir -p $GITHUB_WORKSPACE/kernel_workspace
 
-    - name: Update dtc
-      run: |
-        cd $GITHUB_WORKSPACE/kernel_workspace
-        # Download binutils 2.26 (versi sebelum perubahan behavior)
-        git clone https://android.googlesource.com/platform/external/dtc
-
     - name: Download Clang Toolchain
       run: |
         cd $GITHUB_WORKSPACE
@@ -60,6 +54,8 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         git clone ${{ env.KERNEL_SOURCE }} -b ${{ env.KERNEL_SOURCE_BRANCH }} android-kernel --depth=1
+        wget https://github.com/redgitk/android_kernel_nokia_fork/commit/fb9bc297d182d0ecce526d951b70f69242d8bf2f.patch -O ignore_magic.patch
+        patch -p1 < ignore_magic.patch
 
     - name: Setup KernelSU Next
       if: env.ENABLE_KERNELSU == 'true'
@@ -71,13 +67,6 @@ jobs:
         patch -p1 < $GITHUB_WORKSPACE/ksu_manual_hook.patch
         patch -p1 < $GITHUB_WORKSPACE/custom.patch
 
-    - name: Setup wmt driver
-      run: |
-        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        git clone https://github.com/rsuntkOrgs/mtk_connectivity_module.git -b staging-4.14
-        mkdir -p vendor/mediatek/kernel_modules/connectivity/
-        cp -r mtk_connectivity_module/* drivers/misc/mediatek/connectivity
-
     - name: Setup Configuration for Kernel
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
@@ -85,9 +74,8 @@ jobs:
         export ARCH=${{ env.ARCH }}
         export SUBARCH=${{ env.ARCH }}
         export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
-        export KBUILD_BUILD_HOST=7i
+        export KBUILD_BUILD_HOST=ubuntu
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
-        export CONFIG_DRV_BUILD_IN=y
 
         make -j$(nproc --all) \
          O=out ARCH=${{ env.ARCH }} \
@@ -102,9 +90,8 @@ jobs:
         export ARCH=${{ env.ARCH }}
         export SUBARCH=${{ env.ARCH }}
         export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
-        export KBUILD_BUILD_HOST=7i
+        export KBUILD_BUILD_HOST=ubuntu
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
-        export CONFIG_DRV_BUILD_IN=y
 
         make -j$(nproc --all) \
          O=out ARCH=arm64 \
