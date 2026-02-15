@@ -20,18 +20,17 @@ jobs:
         echo "CLANG_VERSION=$(cat config.env | grep "CLANG_VERSION" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "BUILD_EXTRA_COMMAND=$(cat config.env | grep "EXTRA_BUILD_COMMAND" | head -n 1 | cut -d ":" -f 2- | tr ':' ' ')" >> $GITHUB_ENV
         echo "DISABLE-LTO=$(cat config.env | grep "DISABLE-LTO" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
+        echo "APPLY_CUSTOM_PATCH=$(cat config.env | grep "APPLY_CUSTOM_PATCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "ENABLE_KERNELSU=$(cat config.env | grep "ENABLE_KERNELSU" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "ENABLE_SUSFS=$(cat config.env | grep "ENABLE_SUSFS" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
-        echo "NEED_DTBO=$(cat config.env | grep "NEED_DTBO" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
-        echo "MAKE_BOOT_IMAGE=$(cat config.env | grep "MAKE_BOOT_IMAGE" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
-        echo "SOURCE_BOOT_IMAGE=$(cat config.env | grep "SOURCE_BOOT_IMAGE" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
-        echo "DISABLE_CC_WERROR=$(cat config.env | grep "DISABLE_CC_WERROR" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
-        echo "APPLY_CUSTOM_PATCH=$(cat config.env | grep "APPLY_CUSTOM_PATCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
+        echo "KERNELSU_SOURCE=$(cat config.env | grep "KERNELSU_SOURCE" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
+        echo "KERNELSU_BRANCH=$(cat config.env | grep "KERNELSU_BRANCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
+        echo "KERNELSU_REPO_NAME=$(cat config.env | grep "KERNELSU_SOURCE" | head -n 1 | cut -d "=" -f 2 | awk -F "/" '{print $NF}' | sed 's/.git$//')" >> $GITHUB_ENV
 
     - name: Setup build kernel environment
       run: |
         echo "BUILD_TIME=$(TZ=Asia/Jakarta date "+%Y%m%d%H%M")" >> $GITHUB_ENV
-        echo "DEVICE=$(echo ${{ env.KERNEL_CONFIG }} | sed 's!vendor/!!;s/_defconfig//;s/_user//;s/-perf//;s/^.*\///')" >> $GITHUB_ENV
+        echo "DEVICE=$(echo ${{ env.KERNEL_CONFIG }} | sed 's!vendor/!!;s/_defconfig//;s/_user//;s/-perf//' | awk -F "/" '{print $NF}')" >> $GITHUB_ENV
         sudo apt-get update
         sudo apt-get install git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 libncurses6 libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python3 python3-dev swig python-is-python3 python2 texinfo
         mkdir -p $GITHUB_WORKSPACE/kernel_workspace
@@ -52,24 +51,28 @@ jobs:
         cd $GITHUB_WORKSPACE/kernel_workspace
         git clone ${{ env.KERNEL_SOURCE }} -b ${{ env.KERNEL_SOURCE_BRANCH }} android-kernel --depth=1
 
-    - name: Setup Sukisu Ultra
+    - name: Setup KernelSU
       if: env.ENABLE_KERNELSU == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s builtin
-        KSU_VERSION="builtin"
-        echo "UPLOADNAME=-KernelSU_$KSU_VERSION" >> $GITHUB_ENV
-
-    - name: Setup susfs
-      if: env.ENABLE_SUSFS == 'true'
-      run: |
-        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        git clone ${{ env.KERNELSU_SOURCE }} -b ${{ env.KERNELSU_BRANCH }} --depth 1 KernelSU
+        ln -fsrv KernelSU/kernel drivers/kernelsu
+        patch -p1 < $GITHUB_WORKSPACE/ksu.patch
+        echo "UPLOADNAME=-${{ env.KERNELSU_REPO_NAME }}-${{ env.KERNELSU_BRANCH }}" >> $GITHUB_ENV
+        # Susfs setup
         git clone https://github.com/JackA1ltman/NonGKI_Kernel_Build_2nd.git
-        bash NonGKI_Kernel_Build_2nd/Patches/susfs_inline_hook_patches.sh
-        patch -p1 < NonGKI_Kernel_Build_2nd/Patches/Patch/susfs_patch_to_4.14.patch
-        sed -i 's/ksu_vfs_read_hook/ksu_init_rc_hook/g' fs/read_write.c
-        echo "CONFIG_KSU=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_KSU_SUSFS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+        if [ ${{ env.ENABLE_SUSFS }} = true ]; then
+          bash NonGKI_Kernel_Build_2nd/Patches/susfs_inline_hook_patches.sh
+          patch -p1 < NonGKI_Kernel_Build_2nd/Patches/Patch/susfs_patch_to_4.14.patch
+          echo "CONFIG_KSU=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+          echo "CONFIG_KSU_SUSFS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+        else
+          bash NonGKI_Kernel_Build_2nd/Patches/syscall_hook_patches.sh
+        fi
+        # sukisu
+        if [ -z $(grep -qi "sukisu" <<< ${{ env.KERNELSU_REPO_NAME }}) ]; then
+          sed -i 's/ksu_vfs_read_hook/ksu_init_rc_hook/g' fs/read_write.c
+        fi
 
     - name: Setup Configuration for Kernel
       run: |

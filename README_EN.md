@@ -97,3 +97,4 @@ e.g. https://raw.githubusercontent.com/xiaoleGun/KernelSU_action/main/boot/boot-
 - [KernelSU](https://github.com/tiann/KernelSU)
 - [xiaoxindada](https://github.com/xiaoxindada)
 - [xiaoleGun](https://github.com/xiaoleGun)
+- [JackA1ltman](https://github.com/JackA1ltman/NonGKI_Kernel_Build_2nd)
