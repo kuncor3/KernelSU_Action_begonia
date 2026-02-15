@@ -408,10 +408,33 @@ index 707c6bfef..fc18e60b0 100755
  """
  tdc_batch.py - a script to generate TC batch file
 diff --git a/kernel/module.c b/kernel/module.c
-index 47c10db36..1e3ca3310 100644
+index 47c10db36398..c9707eee7815 100644
 --- a/kernel/module.c
 +++ b/kernel/module.c
-@@ -3663,6 +3663,9 @@ static int load_module(struct load_info *info, const char __user *uargs,
+@@ -1322,7 +1322,7 @@ static int check_version(const struct load_info *info,
+ bad_version:
+ 	pr_warn("%s: disagrees about version of symbol %s\n",
+ 	       info->name, symname);
+-	return 0;
++	return 1;
+ }
+ 
+ static inline int check_modstruct_version(const struct load_info *info,
+@@ -3005,6 +3005,13 @@ static struct module *setup_load_info(struct load_info *info, int flags)
+ 
+ 	info->index.pcpu = find_pcpusec(info);
+ 
++	// ← TAMBAHKAN CHECK UNTUK SKIP MODSTRUCT VERSION
++	/* Check module struct version now, before we try to use module. */
++	if (!(flags & MODULE_INIT_IGNORE_MODVERSIONS)) {
++		if (!check_modstruct_version(info, mod))
++			return ERR_PTR(-ENOEXEC);
++	}
++
+ 	/* Check module struct version now, before we try to use module. */
+ 	if (!check_modstruct_version(info, mod))
+ 		return ERR_PTR(-ENOEXEC);
+@@ -3663,6 +3670,9 @@ static int load_module(struct load_info *info, const char __user *uargs,
  	long err;
  	char *after_dashes;
  
@@ -421,3 +444,4 @@ index 47c10db36..1e3ca3310 100644
  	err = module_sig_check(info, flags);
  	if (err)
  		goto free_copy;
+
