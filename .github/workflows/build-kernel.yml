@@ -54,8 +54,6 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         git clone ${{ env.KERNEL_SOURCE }} -b ${{ env.KERNEL_SOURCE_BRANCH }} android-kernel --depth=1
-        wget https://github.com/redgitk/android_kernel_nokia_fork/commit/fb9bc297d182d0ecce526d951b70f69242d8bf2f.patch -O ignore_magic.patch
-        patch -p1 < ignore_magic.patch
 
     - name: Setup KernelSU Next
       if: env.ENABLE_KERNELSU == 'true'
