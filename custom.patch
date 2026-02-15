@@ -7,7 +7,7 @@ index 6fe2787d1..869383dcb 100755
  
  if [ -z "$KBUILD_BUILD_TIMESTAMP" ]; then
 -	TIMESTAMP=`date`
-+	TIMESTAMP=`date -ud '-6 months'`
++	TIMESTAMP=`date -ud '-5 years'`
  else
  	TIMESTAMP=$KBUILD_BUILD_TIMESTAMP
  fi
