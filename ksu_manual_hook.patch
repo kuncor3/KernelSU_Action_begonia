@@ -157,25 +157,3 @@ index bd30a973f..db4a864d9 100644
  
  	/* We only trust the superuser with rebooting the system. */
  	if (!ns_capable(pid_ns->user_ns, CAP_SYS_BOOT))
-diff --git a/scripts/setlocalversion b/scripts/setlocalversion
-index 71f394106..27c915979 100755
---- a/scripts/setlocalversion
-+++ b/scripts/setlocalversion
-@@ -75,7 +75,7 @@ scm_version()
- 
- 		# Check for uncommitted changes
- 		if git diff-index --name-only HEAD | grep -qv "^scripts/package"; then
--			printf '%s' -dirty
-+			printf '%s' '+'
- 		fi
- 
- 		# All done with git
-@@ -99,7 +99,7 @@ scm_version()
- 		# Are there uncommitted changes?
- 		# These are represented by + after the changeset id.
- 		case "$hgid" in
--			*+|*+\ *) printf '%s' -dirty ;;
-+			*+|*+\ *) printf '%s' '+' ;;
- 		esac
- 
- 		# All done with mercurial

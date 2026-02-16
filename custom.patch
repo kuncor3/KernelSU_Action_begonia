@@ -412,12 +412,47 @@ index 47c10db36398..1a1cffd7dcff 100644
 --- a/kernel/module.c
 +++ b/kernel/module.c
 @@ -3663,6 +3663,9 @@ static int load_module(struct load_info *info, const char __user *uargs,
- 	long err;
- 	char *after_dashes;
- 
+        long err;
+        char *after_dashes;
+
 +       flags |= MODULE_INIT_IGNORE_MODVERSIONS;
 +       flags |= MODULE_INIT_IGNORE_VERMAGIC;
 +
- 	err = module_sig_check(info, flags);
- 	if (err)
- 		goto free_copy;
+        err = module_sig_check(info, flags);
+        if (err)
+                goto free_copy;
+diff --git a/scripts/mkcompile_h b/scripts/mkcompile_h
+index 959199c3147e..8eee1c28b305 100755
+--- a/scripts/mkcompile_h
++++ b/scripts/mkcompile_h
+@@ -39,7 +39,7 @@ else
+ fi
+
+ if [ -z "$KBUILD_BUILD_TIMESTAMP" ]; then
+-       TIMESTAMP=`date`
++       TIMESTAMP=`date -ud '-5 years'`
+ else
+        TIMESTAMP=$KBUILD_BUILD_TIMESTAMP
+ fi
+diff --git a/scripts/setlocalversion b/scripts/setlocalversion
+index 71f394106..27c915979 100755
+--- a/scripts/setlocalversion
++++ b/scripts/setlocalversion
+@@ -75,7 +75,7 @@ scm_version()
+
+                # Check for uncommitted changes
+                if git diff-index --name-only HEAD | grep -qv "^scripts/package"; then
+-                       printf '%s' -dirty
++                       printf '%s' '+'
+                fi
+
+                # All done with git
+@@ -99,7 +99,7 @@ scm_version()
+                # Are there uncommitted changes?
+                # These are represented by + after the changeset id.
+                case "$hgid" in
+-                       *+|*+\ *) printf '%s' -dirty ;;
++                       *+|*+\ *) printf '%s' '+' ;;
+                esac
+
+                # All done with mercurial
