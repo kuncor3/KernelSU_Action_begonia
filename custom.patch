@@ -320,7 +320,7 @@ index b494a67a1..f97fe62e3 100644
 +++ b/tools/perf/scripts/python/call-graph-from-sql.py
 @@ -1,4 +1,4 @@
 -#!/usr/bin/python2
-+#!/usr/bin/python22
++#!/usr/bin/python2
  # call-graph-from-sql.py: create call-graph from sql database
  # Copyright (c) 2014-2017, Intel Corporation.
  #
@@ -363,7 +363,7 @@ index 23f1bf175..920672cb9 100644
 +++ b/tools/perf/util/setup.py
 @@ -1,4 +1,4 @@
 -#!/usr/bin/python2
-+#!/usr/bin/python22
++#!/usr/bin/python2
  
  from os import getenv
  
@@ -403,7 +403,7 @@ index 707c6bfef..fc18e60b0 100755
 +++ b/tools/testing/selftests/tc-testing/tdc_batch.py
 @@ -1,4 +1,4 @@
 -#!/usr/bin/python3
-+#!/usr/bin/python23
++#!/usr/bin/python3
  
  """
  tdc_batch.py - a script to generate TC batch file
