@@ -61,10 +61,20 @@ jobs:
       if: env.ENABLE_KERNELSU == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s legacy
-        KSU_VERSION="legacy"
+        curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s builtin
+        KSU_VERSION="builtin"
         echo "UPLOADNAME=-KernelSU_$KSU_VERSION" >> $GITHUB_ENV
-        patch -p1 < $GITHUB_WORKSPACE/ksu_manual_hook.patch
+        if [ ${{ env.ADD_KPROBES_CONFIG }} = true ]; then
+            echo "CONFIG_MODULES=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+            echo "CONFIG_KPROBES=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+            echo "CONFIG_HAVE_KPROBES=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+            echo "CONFIG_KPROBE_EVENTS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+            echo "CONFIG_MODULE_FORCE_LOAD=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+            echo "CONFIG_MODULE_UNLOAD=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+            echo "CONFIG_MODULE_FORCE_UNLOAD=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+        else
+            patch -p1 < $GITHUB_WORKSPACE/ksu_manual_hook.patch
+        fi
         patch -p1 < $GITHUB_WORKSPACE/custom.patch
 
     - name: Setup Configuration for Kernel
