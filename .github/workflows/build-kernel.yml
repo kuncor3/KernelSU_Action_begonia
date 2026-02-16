@@ -54,8 +54,8 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         git clone ${{ env.KERNEL_SOURCE }} -b ${{ env.KERNEL_SOURCE_BRANCH }} android-kernel --depth=1
-        git clone https://github.com/rsuntkOrgs/mtk_connectivity_module.git -b staging-4.14 --depth 1
-        cp -r mtk_connectivity_module/* android-kernel/drivers/misc/mediatek/connectivity
+        #git clone https://github.com/rsuntkOrgs/mtk_connectivity_module.git -b staging-4.14 --depth 1
+        #cp -r mtk_connectivity_module/* android-kernel/drivers/misc/mediatek/connectivity
 
     - name: Setup KernelSU Next
       if: env.ENABLE_KERNELSU == 'true'
