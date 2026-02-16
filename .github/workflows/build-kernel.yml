@@ -152,7 +152,7 @@ jobs:
             rm -rf AnyKernel3/.git* AnyKernel3/README.md
         fi
 
-    - name: Upload Raw Kernel
+    - name: Upload Kernel Files
       if: env.CHECK_FILE_IS_OK == 'true'
       uses: actions/upload-artifact@v4
       with:
