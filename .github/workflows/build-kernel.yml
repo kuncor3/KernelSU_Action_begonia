@@ -77,6 +77,8 @@ jobs:
         echo "CONFIG_MODULE_FORCE_LOAD=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         echo "CONFIG_MODULE_UNLOAD=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         echo "CONFIG_MODULE_FORCE_UNLOAD=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+        echo "CONFIG_KALLSYMS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+        echo "CONFIG_KALLSYMS_ALL=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         patch -p1 < $GITHUB_WORKSPACE/custom.patch
 
     - name: Setup Configuration for Kernel
@@ -124,7 +126,7 @@ jobs:
        cd $GITHUB_WORKSPACE/kernel_workspace
        if [ -f android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }} ]; then
            if [ -f android-kernel/out/arch/${{ env.ARCH }}/boot/Image ]; then
-               strings android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }} | grep -Ei "linux version [0-9].*"
+               strings android-kernel/out/arch/${{ env.ARCH }}/boot/Image | grep -Ei "linux version [0-9].*"
            fi
            echo "CHECK_FILE_IS_OK=true" >> $GITHUB_ENV
        else
