@@ -132,14 +132,13 @@ jobs:
     - name: Prepare kernel files
       run: |
         mkdir $GITHUB_WORKSPACE/kernel_workspace/image
-        find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot \
-            -maxdepth 1 -type f | while read file; do cp -v $file $GITHUB_WORKSPACE/kernel_workspace/image
+        cd $GITHUB_WORKSPACE/kernel_workspace/image
+        find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot -maxdepth 1 -type f | while read file; do cp -v $file .; done
 
         cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/.config \
              $GITHUB_WORKSPACE/kernel_workspace/image/kernel_configs.txt
 
-        find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out -type f -name "*.ko" |\
-             while read file; do cp -rv $file $GITHUB_WORKSPACE/kernel_workspace/image; done
+        find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out -type f -name "*.ko" | while read file; do cp -rv $file .; done
 
         if [ ${{ env.ANYKERNEL3 }} = true ]; then
             cd $GITHUB_WORKSPACE/kernel_workspace
