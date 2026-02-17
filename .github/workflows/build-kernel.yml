@@ -126,17 +126,18 @@ jobs:
        else
            echo "Kernel output file is empty"
        fi
-       if [ -f android-kernel/out/arch/${{ env.ARCH }}/boot/mtk.dtb ]; then
-           echo "CHECK_DTBO_IS_OK=true" >> $GITHUB_ENV
-       else
-           echo "DTBO image is empty"
-       fi
 
     - name: Prepare kernel files
       run: |
-        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot
-        cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/.config kernel-config.txt
-        find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out -type f -name "*.ko" | while read file; do cp -rv $file .; done
+        mkdir $GITHUB_WORKSPACE/kernel_workspace/image
+        find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot \
+            -maxdepth 1 -type f -exec cp -v {} $GITHUB_WORKSPACE/kernel_workspace/image +
+
+        cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/.config \
+             $GITHUB_WORKSPACE/kernel_workspace/image/kernel_configs.txt
+
+        find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out -type f -name "*.ko" |\
+             while read file; do cp -rv $file $GITHUB_WORKSPACE/kernel_workspace/image; done
 
         if [ ${{ env.ANYKERNEL3 }} = true ]; then
             cd $GITHUB_WORKSPACE/kernel_workspace
@@ -156,7 +157,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.KERNEL_FILE }}${{ env.UPLOADNAME }}-${{ env.DEVICE }}-${{ env.BUILD_TIME }}
-        path: kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/
+        path: kernel_workspace/image/*
 
     - name: Upload AnyKernel3
       if: env.CHECK_ANYKERNEL3_ENABLED == 'true'
