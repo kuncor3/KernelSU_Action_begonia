@@ -122,6 +122,7 @@ jobs:
       run: |
        cd $GITHUB_WORKSPACE/kernel_workspace
        if [ -f android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }} ]; then
+           strings android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }} | grep -Ei "linux version [0-9].*"
            echo "CHECK_FILE_IS_OK=true" >> $GITHUB_ENV
        else
            echo "Kernel output file is empty"
