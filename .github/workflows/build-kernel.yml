@@ -51,7 +51,10 @@ jobs:
     - name: Download GCC Toolchain
       run: |
         cd $GITHUB_WORKSPACE
-        git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9.git -b lineage-19.1
+        #git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9.git -b lineage-19.1 gcc-android
+        mkdir gcc-android
+        wget https://github.com/ravindu644/Android-Kernel-Tutorials/releases/download/toolchains/arm-gnu-toolchain-14.2.rel1-x86_64-aarch64-none-linux-gnu.tar.xz
+        tar -C gcc-android/ -zxvf arm-gnu-toolchain-14.2.rel1-x86_64-aarch64-none-linux-gnu.tar.xz
 
     - name: Download kernel source
       run: |
@@ -94,7 +97,7 @@ jobs:
     - name: Setup Configuration for Kernel
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        export PATH=$GITHUB_WORKSPACE/clang-android/bin:$GITHUB_WORKSPACE/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/bin:$PATH
+        export PATH=$GITHUB_WORKSPACE/clang-android/bin:$GITHUB_WORKSPACE/gcc-android/bin:$PATH
         export ARCH=${{ env.ARCH }}
         export SUBARCH=${{ env.ARCH }}
         #export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
@@ -110,7 +113,7 @@ jobs:
     - name: Build kernel
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        export PATH=$GITHUB_WORKSPACE/clang-android/bin:$GITHUB_WORKSPACE/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/bin:$PATH
+        export PATH=$GITHUB_WORKSPACE/clang-android/bin:$GITHUB_WORKSPACE/gcc-android/bin:$PATH
         export ARCH=${{ env.ARCH }}
         export SUBARCH=${{ env.ARCH }}
         #export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
