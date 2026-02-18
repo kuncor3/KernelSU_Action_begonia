@@ -48,10 +48,7 @@ jobs:
     - name: Download GCC Toolchain
       run: |
         cd $GITHUB_WORKSPACE
-        #git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9.git -b lineage-19.1 gcc-android
-        wget https://github.com/ravindu644/Android-Kernel-Tutorials/releases/download/toolchains/arm-gnu-toolchain-14.2.rel1-x86_64-aarch64-none-linux-gnu.tar.xz
-        tar -Jxvf arm-gnu-toolchain-14.2.rel1-x86_64-aarch64-none-linux-gnu.tar.xz
-        mv -v arm-gnu-toolchain-14.2.rel1-x86_64-aarch64-none-linux-gnu gcc-android
+        git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9.git -b lineage-19.1 gcc-android
 
     - name: Download kernel source
       run: |
@@ -105,7 +102,7 @@ jobs:
          O=out ARCH=${{ env.ARCH }} \
          CC=clang \
          CLANG_TRIPLE=aarch64-linux-gnu- \
-         CROSS_COMPILE=aarch64-none-linux-gnu- ${{ env.KERNEL_CONFIG }}
+         CROSS_COMPILE=aarch64-linux-android- ${{ env.KERNEL_CONFIG }}
 
     - name: Build kernel
       run: |
@@ -120,7 +117,7 @@ jobs:
         make -j$(nproc --all) \
          O=out ARCH=arm64 \
          CC=clang \
-         CROSS_COMPILE=aarch64-none-linux-gnu- \
+         CROSS_COMPILE=aarch64-linux-android- \
          CLANG_TRIPLE=aarch64-linux-gnu- savedefconfig
 
         cp -f out/defconfig arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
@@ -128,7 +125,7 @@ jobs:
         make -j$(nproc --all) \
          O=out ARCH=${{ env.ARCH }} \
          CC=clang \
-         CROSS_COMPILE=aarch64-none-linux-gnu- \
+         CROSS_COMPILE=aarch64-linux-android- \
          CLANG_TRIPLE=aarch64-linux-gnu- ${{ env.BUILD_EXTRA_COMMAND }}
 
     - name: Check a kernel output files
