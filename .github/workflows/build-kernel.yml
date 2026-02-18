@@ -42,11 +42,11 @@ jobs:
     - name: Download Clang Toolchain
       run: |
         cd $GITHUB_WORKSPACE
-        git clone https://github.com/dandelion64-Archives/clang-r353983c.git clang-android
-        #mkdir clang-android
-        #cd clang-android
+        #git clone https://github.com/dandelion64-Archives/clang-r353983c.git clang-android
         #wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/emu-29.0-release/clang-r353983c.tar.gz
-        #tar xf clang-r353983c.tar.gz
+        mkdir clang-android
+        wget https://github.com/ravindu644/Android-Kernel-Tutorials/releases/download/toolchains/clang-r383902b.tar.gz
+        tar -C clang-android/ -zxvf clang-r383902b.tar.gz
 
     - name: Download GCC Toolchain
       run: |
