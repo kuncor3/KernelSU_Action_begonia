@@ -94,10 +94,11 @@ jobs:
 
         patch -p1 < $GITHUB_WORKSPACE/custom.patch
 
-        if [ ${{ env.DISABLE-LTO }} != false ]; then
+        if [ ${{ env.DISABLE-LTO }} != true ]; then
             echo "CONFIG_LTO=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
             echo "CONFIG_ARCH_SUPPORTS_LTO_CLANG=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
             echo "CONFIG_LTO_CLANG=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+            echo "BUILD_EXTRA_COMMAND=$(echo ${{ env.BUILD_EXTRA_COMMAND }} | sed "s/LD=[^ ]*/LD=aarch64-linux-android-ld.bfd/")" >> $GITHUB_ENV
         fi
 
         make -j$(nproc --all) \
@@ -128,7 +129,7 @@ jobs:
          O=out ARCH=${{ env.ARCH }} \
          CC=clang \
          CROSS_COMPILE=aarch64-linux-android- \
-         CLANG_TRIPLE=aarch64-linux-gnu- ${{ env.BUILD_EXTRA_COMMAND }} 2>&1 | tee build.log
+         CLANG_TRIPLE=aarch64-linux-gnu- ${{ env.BUILD_EXTRA_COMMAND }}
 
     - name: Check a kernel output files
       run: |
