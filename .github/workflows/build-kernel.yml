@@ -69,10 +69,10 @@ jobs:
             echo "CONFIG_HAVE_KPROBES=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
             echo "CONFIG_KPROBE_EVENTS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         else
-            git clone https://github.com/JackA1ltman/NonGKI_Kernel_Build_2nd.git
-            bash NonGKI_Kernel_Build_2nd/Patches/syscall_hook_patches.sh
-            sed -i 's/ksu_vfs_read_hook/ksu_init_rc_hook/g' fs/read_write.c
-            #patch -p1 < $GITHUB_WORKSPACE/ksu_manual_hook.patch
+            #git clone https://github.com/JackA1ltman/NonGKI_Kernel_Build_2nd.git
+            #bash NonGKI_Kernel_Build_2nd/Patches/syscall_hook_patches.sh
+            #sed -i 's/ksu_vfs_read_hook/ksu_init_rc_hook/g' fs/read_write.c
+            patch -p1 < $GITHUB_WORKSPACE/ksu_manual_hook.patch
         fi
         echo "CONFIG_KSU=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         #echo "CONFIG_KSU_MANUAL_HOOK=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
