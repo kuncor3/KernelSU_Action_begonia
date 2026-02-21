@@ -129,10 +129,10 @@ jobs:
 
           {
            make -j$(nproc --all) \
-           O=out ARCH=${{ env.ARCH }} \
-           CC=clang \
-           CROSS_COMPILE=aarch64-linux-android- \
-           CLANG_TRIPLE=aarch64-linux-gnu- ${{ env.BUILD_EXTRA_COMMAND }}
+            O=out ARCH=${{ env.ARCH }} \
+            CC=clang \
+            CROSS_COMPILE=aarch64-linux-android- \
+            CLANG_TRIPLE=aarch64-linux-gnu- ${{ env.BUILD_EXTRA_COMMAND }}
           } > >(tee build.log) 2>&1
 
     - name: Check a kernel output files
