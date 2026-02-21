@@ -41,20 +41,17 @@ jobs:
     - name: Download Clang Toolchain
       run: |
         cd $GITHUB_WORKSPACE
-        wget https://dl.google.com/android/repository/android-ndk-r21e-linux-x86_64.zip
-        unzip android-ndk-r21e-linux-x86_64.zip
-        ln -sfv android-ndk-r21e-linux-x86_64 clang-android
-        #git clone https://github.com/dandelion64-Archives/clang-r353983c.git clang-android
+        git clone https://github.com/dandelion64-Archives/clang-r353983c.git clang-android
         #wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/emu-29.0-release/clang-r353983c.tar.gz
-        echo "CLANG_PATH=$GITHUB_WORKSPACE/clang-android/toolchains/llvm/prebuilt/linux-x86_64" >> $GITHUB_ENV
-        #${{ env.CLANG_PATH }}/bin/clang -v
+        echo "CLANG_PATH=$GITHUB_WORKSPACE/clang-android" >> $GITHUB_ENV
+        ${{ env.CLANG_PATH }}/bin/clang -v
 
     - name: Download GCC Toolchain
       run: |
         cd $GITHUB_WORKSPACE
         git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9.git -b lineage-19.1 gcc-android
         echo "GCC_PATH=$GITHUB_WORKSPACE/gcc-android" >> $GITHUB_ENV
-        #${{ env.GCC_PATH }}/bin/aarch64-linux-android-gcc -v
+        ${{ env.GCC_PATH }}/bin/aarch64-linux-android-gcc -v
 
     - name: Download kernel source
       run: |
