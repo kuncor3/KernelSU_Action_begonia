@@ -43,7 +43,7 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE
         wget https://dl.google.com/android/repository/android-ndk-r21e-linux-x86_64.zip
-        tar xf android-ndk-r21e-linux-x86_64.zip
+        unzip android-ndk-r21e-linux-x86_64.zip
         ln -sfv android-ndk-r21e-linux-x86_64 clang-android
         #git clone https://github.com/dandelion64-Archives/clang-r353983c.git clang-android
         #wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/emu-29.0-release/clang-r353983c.tar.gz
