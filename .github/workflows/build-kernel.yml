@@ -43,12 +43,14 @@ jobs:
         cd $GITHUB_WORKSPACE
         git clone https://github.com/dandelion64-Archives/clang-r353983c.git clang-android
         echo "CLANG_PATH=$GITHUB_WORKSPACE/clang-android" >> $GITHUB_ENV
+        ./clang-android/bin/clang -v
 
     - name: Download GCC Toolchain
       run: |
         cd $GITHUB_WORKSPACE
         git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9.git -b lineage-19.1 gcc-android
         echo "GCC_PATH=$GITHUB_WORKSPACE/gcc-android" >> $GITHUB_ENV
+        ./gcc-android/bin/aarch64-linux-android-gcc -v
 
     - name: Download kernel source
       run: |
@@ -125,11 +127,13 @@ jobs:
 
         cp -f out/defconfig arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
 
-          make -j$(nproc --all) \
+          {
+           make -j$(nproc --all) \
            O=out ARCH=${{ env.ARCH }} \
            CC=clang \
            CROSS_COMPILE=aarch64-linux-android- \
            CLANG_TRIPLE=aarch64-linux-gnu- ${{ env.BUILD_EXTRA_COMMAND }}
+          } > >(tee build.log) 2>&1
 
     - name: Check a kernel output files
       run: |
