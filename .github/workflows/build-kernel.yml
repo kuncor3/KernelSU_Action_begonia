@@ -59,9 +59,7 @@ jobs:
       if: env.ENABLE_KERNELSU == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        #curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash
         curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s builtin
-        #curl -LSs "https://raw.githubusercontent.com/backslashxx/KernelSU/refs/heads/master/kernel/setup.sh" | bash
         KSU_TYPE="sukisu"
         echo "UPLOADNAME=-$KSU_TYPE" >> $GITHUB_ENV
         if [ ${{ env.ADD_KPROBES_CONFIG }} = true ]; then
@@ -69,11 +67,13 @@ jobs:
             echo "CONFIG_HAVE_KPROBES=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
             echo "CONFIG_KPROBE_EVENTS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         else
-            patch -p1 < $GITHUB_WORKSPACE/ksu_manual_hook.patch
+            git clone https://github.com/JackA1ltman/NonGKI_Kernel_Build_2nd.git
+            bash NonGKI_Kernel_Build_2nd/Patches/syscall_hook_patches.sh
+            sed -i 's/ksu_vfs_read_hook/ksu_init_rc_hook/g' fs/read_write.c
+            #patch -p1 < $GITHUB_WORKSPACE/ksu_manual_hook.patch
         fi
         echo "CONFIG_KSU=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_KSU_MANUAL_HOOK=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        sed -i 's/ksu_vfs_read_hook/ksu_init_rc_hook/g' fs/read_write.c
+        #echo "CONFIG_KSU_MANUAL_HOOK=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
 
     - name: Setup Configuration for Kernel
       run: |
@@ -81,7 +81,6 @@ jobs:
         export PATH=${{ env.CLANG_PATH }}/bin:${{ env.GCC_PATH }}/bin:$PATH
         export ARCH=${{ env.ARCH }}
         export SUBARCH=${{ env.ARCH }}
-        #export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
         export KBUILD_BUILD_HOST=ubuntu
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
 
@@ -115,7 +114,6 @@ jobs:
         export PATH=${{ env.CLANG_PATH }}/bin:${{ env.GCC_PATH }}/bin:$PATH
         export ARCH=${{ env.ARCH }}
         export SUBARCH=${{ env.ARCH }}
-        #export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
         export KBUILD_BUILD_HOST=ubuntu
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
 
