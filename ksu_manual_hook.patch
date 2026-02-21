@@ -92,7 +92,7 @@ index b249957e4..25e0e8777 100644
  
 +#ifdef CONFIG_KSU
 +extern bool ksu_init_rc_hook __read_mostly;
-+extern int ksu_handle_vfs_read(struct file **file_ptr, char __user **buf_ptr,
++extern int ksu_handle_sys_read(struct file **file_ptr, char __user **buf_ptr,
 +			size_t *count_ptr, loff_t **pos);
 +#endif
 +
@@ -102,7 +102,7 @@ index b249957e4..25e0e8777 100644
  
 +	#ifdef CONFIG_KSU
 +	if (unlikely(ksu_init_rc_hook))
-+		ksu_handle_vfs_read(&file, &buf, &count, &pos);
++		ksu_handle_sys_read(&file, &buf, &count, &pos);
 +	#endif
 +
  	if (!(file->f_mode & FMODE_READ))
