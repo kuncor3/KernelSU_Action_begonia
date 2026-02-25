@@ -61,17 +61,15 @@ jobs:
       if: env.ENABLE_KERNELSU == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s builtin
-        KSU_TYPE="sukisu"
+        #curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s builtin
+        curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s legacy
+        KSU_TYPE="ksun"
         echo "UPLOADNAME=-$KSU_TYPE" >> $GITHUB_ENV
         if [ ${{ env.ADD_KPROBES_CONFIG }} = true ]; then
             echo "CONFIG_KPROBES=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
             echo "CONFIG_HAVE_KPROBES=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
             echo "CONFIG_KPROBE_EVENTS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         else
-            #git clone https://github.com/JackA1ltman/NonGKI_Kernel_Build_2nd.git
-            #bash NonGKI_Kernel_Build_2nd/Patches/syscall_hook_patches.sh
-            #sed -i 's/ksu_vfs_read_hook/ksu_init_rc_hook/g' fs/read_write.c
             patch -p1 < $GITHUB_WORKSPACE/ksu_manual_hook.patch
         fi
         echo "CONFIG_KSU=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
@@ -88,10 +86,18 @@ jobs:
 
         echo "CONFIG_TMPFS_POSIX_ACL=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         echo "CONFIG_TMPFS_XATTR=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+        echo "CONFIG_EXT4_FS_POSIX_ACL=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+        echo "CONFIG_F2FS_FS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+        echo "CONFIG_F2FS_FS_SECURITY=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+        echo "CONFIG_F2FS_FS_ENCRYPTION=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+        echo "CONFIG_OVERLAY_FS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+        echo "CONFIG_CFQ_GROUP_IOSCHED=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+        # force load modules
         echo "CONFIG_MODULES=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         echo "CONFIG_MODULE_FORCE_LOAD=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         echo "CONFIG_MODULE_UNLOAD=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         echo "CONFIG_MODULE_FORCE_UNLOAD=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+        # kallsyms
         echo "CONFIG_KALLSYMS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         echo "CONFIG_KALLSYMS_ALL=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
 
