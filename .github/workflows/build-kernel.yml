@@ -100,6 +100,9 @@ jobs:
         # kallsyms
         echo "CONFIG_KALLSYMS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         echo "CONFIG_KALLSYMS_ALL=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+        # compression algo
+        echo "CONFIG_CRYPTO_LZ4HC=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+        echo "CONFIG_CRYPTO_ZSTD=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
 
         patch -p1 < $GITHUB_WORKSPACE/custom.patch
         if [ ${{ env.ENABLE_KERNELSU }} != true ]; then
