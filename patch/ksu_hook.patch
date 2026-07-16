@@ -142,6 +142,7 @@ index f9f3d6261..f7f3e02a9 100644
 +
  	if (disposition != INPUT_IGNORE_EVENT && type != EV_SYN)
  		add_input_randomness(type, code, value);
+
 diff --git a/fs/devpts/inode.c b/fs/devpts/inode.c
 index 32f6f1c68..ed4c46169 100644
 --- a/fs/devpts/inode.c
