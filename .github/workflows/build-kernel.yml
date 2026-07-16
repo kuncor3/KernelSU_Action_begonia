@@ -108,6 +108,7 @@ jobs:
 
     - name: Build kernel
       run: |
+        set -o pipefail
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         export PATH=$GITHUB_WORKSPACE/clang-android/bin:$GITHUB_WORKSPACE/gcc-android/bin:$PATH
         export ARCH=${{ env.ARCH }}
@@ -133,7 +134,7 @@ jobs:
          LOCALVERSION=-perf \
          LLVM=1 \
          CLANG_TRIPLE=aarch64-linux-gnu- \
-         CROSS_COMPILE=aarch64-linux-android- ${{ env.BUILD_EXTRA_COMMAND }}
+         CROSS_COMPILE=aarch64-linux-android- ${{ env.BUILD_EXTRA_COMMAND }} 2>&1 | tee $GITHUB_WORKSPACE/build.log
 
     - name: Check a kernel output files
       run: |
@@ -149,6 +150,7 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot
         cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/.config kernel_configs.txt
+        cp -v $GITHUB_WORKSPACE/build.log build.log
         find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out -type f -name "*.ko" | while read file; do cp -rv $file .; done
 
     - name: Upload Kernel Image only
@@ -164,3 +166,10 @@ jobs:
       with:
         name: ${{ env.KERNEL_FILE }}${{ env.UPLOADNAME }}-${{ env.DEVICE }}-${{ env.BUILD_TIME }}-full
         path: kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/
+
+    - name: Upload build log
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-log-${{ env.BUILD_TIME }}
+        path: build.log
