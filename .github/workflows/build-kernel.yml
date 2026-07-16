@@ -56,15 +56,16 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         git clone ${{ env.KERNELSU_SOURCE }} -b ${{ env.KERNELSU_BRANCH }} --depth 1 KernelSU
-        ln -fsrv KernelSU/kernel drivers/kernelsu
-        echo "UPLOADNAME=-${{ env.KERNELSU_REPO_NAME }}-${{ env.KERNELSU_BRANCH }}" >> $GITHUB_ENV
+        ln -sv $GITHUB_WORKSPACE/KernelSU-Next/kernel drivers/kernelsu
+        echo "UPLOADNAME=-kernelsu-next" >> $GITHUB_ENV
         patch -p1 < $GITHUB_WORKSPACE/patch/ksu.patch
 
         # Susfs setup
         if [ ${{ env.ENABLE_SUSFS }} = true ]; then
           patch -p1 < $GITHUB_WORKSPACE/patch/susfs.patch
-          cd KernelSU
+          cd $GITHUB_WORKSPACE/KernelSU-Next
           patch -p1 < $GITHUB_WORKSPACE/patch/ksu_susfs.patch
+          cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
           patch -p1 < $GITHUB_WORKSPACE/patch/ksu_hook.patch
           echo "CONFIG_KSU=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
           echo "CONFIG_KSU_SUSFS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
