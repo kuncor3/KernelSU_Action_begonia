@@ -57,28 +57,36 @@ jobs:
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         git clone ${{ env.KERNELSU_SOURCE }} -b ${{ env.KERNELSU_BRANCH }} --depth 1 KernelSU
         ln -fsrv KernelSU/kernel drivers/kernelsu
-        patch -p1 < $GITHUB_WORKSPACE/ksu.patch
         echo "UPLOADNAME=-${{ env.KERNELSU_REPO_NAME }}-${{ env.KERNELSU_BRANCH }}" >> $GITHUB_ENV
+        patch -p1 < $GITHUB_WORKSPACE/patch/ksu.patch
+
         # Susfs setup
-        git clone https://github.com/JackA1ltman/NonGKI_Kernel_Build_2nd.git
         if [ ${{ env.ENABLE_SUSFS }} = true ]; then
-          bash NonGKI_Kernel_Build_2nd/Patches/susfs_inline_hook_patches.sh
-          patch -p1 < NonGKI_Kernel_Build_2nd/Patches/Patch/susfs_patch_to_4.14.patch
+          patch -p1 < $GITHUB_WORKSPACE/patch/susfs.patch
+          cd KernelSU
+          patch -p1 < $GITHUB_WORKSPACE/patch/ksu_susfs.patch
+          patch -p1 < $GITHUB_WORKSPACE/patch/ksu_hook.patch
           echo "CONFIG_KSU=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
           echo "CONFIG_KSU_SUSFS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        else
-          bash NonGKI_Kernel_Build_2nd/Patches/syscall_hook_patches.sh
-        fi
-        # sukisu
-        if [ -z $(grep -qi "sukisu" <<< ${{ env.KERNELSU_REPO_NAME }}) ]; then
-          sed -i 's/ksu_vfs_read_hook/ksu_init_rc_hook/g' fs/read_write.c
         fi
 
     - name: Setup Configuration for Kernel
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        if [ ${{ env.APPLY_CUSTOM_PATCH }} = true ] && [ -f $GITHUB_WORKSPACE/custom.patch ]; then
-           patch -p1 < $GITHUB_WORKSPACE/custom.patch
+        if [ ${{ env.APPLY_CUSTOM_PATCH }} = true ] && [ -f $GITHUB_WORKSPACE/patch/custom.patch ]; then
+           patch -p1 < $GITHUB_WORKSPACE/patch/custom.patch
+        fi
+
+        if [ -f $GITHUB_WORKSPACE/extra_kernel_config ]; then
+          while IFS= read -r i || [ -n "$i" ]; do
+            [ -z "$i" ] && continue
+            f=$(echo "$i" | cut -d= -f1)
+            if grep -q "^${f}=" arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}; then
+              sed -i "s|^${f}=.*|$i|" arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+            else
+              echo "$i" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+            fi
+          done < "$GITHUB_WORKSPACE/extra_kernel_config"
         fi
 
         export PATH=$GITHUB_WORKSPACE/clang-android/bin:$GITHUB_WORKSPACE/gcc-android/bin:$PATH
@@ -142,9 +150,16 @@ jobs:
         cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/.config kernel_configs.txt
         find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out -type f -name "*.ko" | while read file; do cp -rv $file .; done
 
-    - name: Upload Kernel
+    - name: Upload Kernel Image only
       if: env.CHECK_FILE_IS_OK == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.KERNEL_FILE }}${{ env.UPLOADNAME }}-${{ env.DEVICE }}-${{ env.BUILD_TIME }}
+        name: ${{ env.KERNEL_FILE }}${{ env.UPLOADNAME }}-${{ env.DEVICE }}-${{ env.BUILD_TIME }}-Image-only
+        path: kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }}
+
+    - name: Upload Kernel Full (config, boot, modules)
+      if: env.CHECK_FILE_IS_OK == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.KERNEL_FILE }}${{ env.UPLOADNAME }}-${{ env.DEVICE }}-${{ env.BUILD_TIME }}-full
         path: kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/
