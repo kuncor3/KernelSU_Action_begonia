@@ -10,6 +10,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Setup Java 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
     - name: Setup Configuration
       run: |
         echo "KERNEL_SOURCE=$(cat config.env | grep "KERNEL_SOURCE" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
@@ -78,6 +85,7 @@ jobs:
         cd manager
         ./spoof
         ./setup.sh
+        ls -lah
 
     - name: Setup Configuration for Kernel
       run: |
