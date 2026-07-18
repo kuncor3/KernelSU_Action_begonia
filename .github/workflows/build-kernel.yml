@@ -63,13 +63,19 @@ jobs:
 
         # Susfs setup
         if [ ${{ env.ENABLE_SUSFS }} = true ]; then
-          cd KernelSU
-          patch -p1 < $GITHUB_WORKSPACE/patch/ksu_susfs.patch
+          #cd KernelSU
+          #patch -p1 < $GITHUB_WORKSPACE/patch/ksu_susfs.patch
           cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
           patch -p1 < $GITHUB_WORKSPACE/patch/susfs.patch
           echo "CONFIG_KSU=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
           echo "CONFIG_KSU_SUSFS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         fi
+
+    - name: Build KernelSU-Next apk
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/KernelSU
+        ./manager/spoof
+        ./manager/setup.sh
 
     - name: Setup Configuration for Kernel
       run: |
