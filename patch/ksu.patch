@@ -19,16 +19,3 @@ index 4a067525b..d9d5779bf 100644
 +
 +obj-$(CONFIG_KSU) += kernelsu/
  
-diff --git a/kernel/Makefile b/kernel/Makefile
-index 47626cdf..cdf07186 100644
---- a/kernel/Makefile
-+++ b/kernel/Makefile
-@@ -165,7 +165,7 @@ GET_CRED_RCU = static inline const struct cred *get_cred_rcu(const struct cred *
- 	struct cred *nonconst_cred = (struct cred *) cred;\n\t\
- 	if (!cred)\n\t\t\
- 		return NULL;\n\t\
--	if (!atomic_inc_not_zero(&nonconst_cred->usage))\n\t\t\
-+	if (!atomic_long_inc_not_zero(&nonconst_cred->usage))\n\t\t\
- 		return NULL;\n\t\
- 	validate_creds(cred);\n\t\
- 	return cred;\n\
