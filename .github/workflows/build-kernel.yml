@@ -55,7 +55,7 @@ jobs:
       if: env.ENABLE_KERNELSU == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        git clone ${{ env.KERNELSU_SOURCE }} -b ${{ env.KERNELSU_BRANCH }} --depth 1 KernelSU
+        git clone ${{ env.KERNELSU_SOURCE }} -b ${{ env.KERNELSU_BRANCH }} KernelSU
         ln -fsrv KernelSU/kernel drivers/kernelsu
         echo "UPLOADNAME=-${{ env.KERNELSU_REPO_NAME }}-${{ env.KERNELSU_BRANCH }}" >> $GITHUB_ENV
         patch -p1 < $GITHUB_WORKSPACE/patch/ksu.patch
@@ -74,8 +74,9 @@ jobs:
     - name: Build KernelSU-Next apk
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/KernelSU
-        ./manager/spoof
-        ./manager/setup.sh
+        cd manager
+        ./spoof
+        ./setup.sh
 
     - name: Setup Configuration for Kernel
       run: |
