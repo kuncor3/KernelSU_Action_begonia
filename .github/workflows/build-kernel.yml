@@ -42,16 +42,39 @@ jobs:
         sudo apt-get install git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 libncurses6 libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python3 python3-dev swig python-is-python3 python2 texinfo rng-tools
         mkdir -p $GITHUB_WORKSPACE/kernel_workspace
 
+    - name: Cache Clang Toolchain
+      uses: actions/cache@v4
+      id: cache-clang
+      with:
+        path: clang-android
+        key: clang-android-r416183b
+
     - name: Download Clang Toolchain
+      if: steps.cache-clang.outputs.cache-hit != 'true'
       run: |
         cd $GITHUB_WORKSPACE
         git clone https://github.com/LineageOS/android_prebuilts_clang_kernel_linux-x86_clang-r416183b.git -b lineage-20.0 clang-android
-        ./clang-android/bin/clang -v
+
+    - name: Cache GCC Toolchain
+      uses: actions/cache@v4
+      id: cache-gcc
+      with:
+        path: gcc-android
+        key: gcc-android-ndk-r23
 
     - name: Download GCC Toolchain
+      if: steps.cache-gcc.outputs.cache-hit != 'true'
       run: |
         cd $GITHUB_WORKSPACE
         git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b ndk-release-r23 gcc-android
+
+    - name: Cache ccache
+      uses: actions/cache@v4
+      with:
+        path: ~/.ccache
+        key: ccache-${{ env.DEVICE }}-${{ github.sha }}
+        restore-keys: |
+          ccache-${{ env.DEVICE }}-
 
     - name: Download kernel source
       run: |
@@ -133,6 +156,8 @@ jobs:
         export KBUILD_BUILD_HOST=ubuntu
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
         export DTC_EXT=dtc
+        export CCACHE_DIR=~/.ccache
+        export USE_CCACHE=1
 
         make -j$(nproc --all) \
          O=out ARCH=arm64 \
@@ -146,7 +171,7 @@ jobs:
 
         make -j$(nproc --all) \
          O=out ARCH=${{ env.ARCH }} \
-         CC=clang \
+         CC="ccache clang" \
          LOCALVERSION=-perf \
          LLVM=1 \
          CLANG_TRIPLE=aarch64-linux-gnu- \
