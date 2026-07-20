@@ -84,28 +84,17 @@ jobs:
         export KBUILD_BUILD_HOST=ubuntu
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
 
-        echo "CONFIG_TMPFS_POSIX_ACL=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_TMPFS_XATTR=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_EXT4_FS_POSIX_ACL=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_F2FS_FS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_F2FS_FS_SECURITY=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_F2FS_FS_ENCRYPTION=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_OVERLAY_FS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_CFQ_GROUP_IOSCHED=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        # force load modules
-        echo "CONFIG_MODULES=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_MODULE_FORCE_LOAD=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_MODULE_UNLOAD=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_MODULE_FORCE_UNLOAD=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        # kallsyms
-        echo "CONFIG_KALLSYMS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_KALLSYMS_ALL=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        # compression algo
-        echo "CONFIG_CRYPTO_LZ4HC=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_CRYPTO_ZSTD=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        # zram
-        echo "CONFIG_ZRAM_WRITEBACK=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_ZRAM_MEMORY_TRACKING=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+        if [ -f $GITHUB_WORKSPACE/extra_kernel_config ]; then
+          while IFS= read -r i || [ -n "$i" ]; do
+            [ -z "$i" ] && continue
+            f=$(echo "$i" | cut -d= -f1)
+            if grep -q "^${f}=" arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}; then
+              sed -i "s|^${f}=.*|$i|" arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+            else
+              echo "$i" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+            fi
+          done < "$GITHUB_WORKSPACE/extra_kernel_config"
+        fi
 
         patch -p1 < $GITHUB_WORKSPACE/custom.patch
         if [ ${{ env.ENABLE_KERNELSU }} != true ]; then
