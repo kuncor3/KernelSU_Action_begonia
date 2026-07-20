@@ -155,11 +155,16 @@ jobs:
       run: |
         mkdir $GITHUB_WORKSPACE/kernel_workspace/image
         cd $GITHUB_WORKSPACE/kernel_workspace/image
-        [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/build.log ] && cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/build.log .
+
+        [ -d $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/certs ] && \
+          cp -rv $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/certs .
+
+        [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/build.log ] && \
+          cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/build.log .
+
         find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot -maxdepth 1 -type f | while read file; do cp -v $file .; done
 
-        cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/.config \
-             $GITHUB_WORKSPACE/kernel_workspace/image/kernel_configs.txt
+        cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/.config kernel_configs.txt
 
         find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out -type f -name "*.ko" | while read file; do cp -rv $file .; done
 
