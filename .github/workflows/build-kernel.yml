@@ -107,10 +107,10 @@ jobs:
       if: envBUILD_KSU_MANAGER == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/KernelSU
-        cd manager
-        ./spoof
-        ./setup.sh
-        ls -lah
+        ./manager/spoof
+        ./manager/setup.sh
+        [[ -f manager/app/build/outputs/apk/release/KernelSU_Next_v*.apk ]] && \
+          ls -lah manager/app/build/outputs/apk/release/KernelSU_Next_v*.apk
 
     - name: Setup Configuration for Kernel
       run: |
