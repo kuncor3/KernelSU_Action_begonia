@@ -75,6 +75,14 @@ jobs:
         echo "CONFIG_KSU=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         #echo "CONFIG_KSU_MANUAL_HOOK=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
 
+    - name: Setup NoMount
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        git clone https://github.com/maxsteeel/nomount.git nomount
+        patch -p1 < ./nomount/kernel/patches/nomount_4.14_kernel_integration.patch
+        cp -v ./nomount/kernel/src/* ./fs/
+        echo "CONFIG_NOMOUNT=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+
     - name: Setup Configuration for Kernel
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
