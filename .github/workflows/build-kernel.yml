@@ -103,6 +103,13 @@ jobs:
           echo "CONFIG_KSU_SUSFS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         fi
 
+    - name: Setup NoMount
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        git clone https://github.com/maxsteeel/nomount.git nomount
+        patch -p1 < ./nomount/kernel/patches/nomount_4.14_kernel_integration.patch
+        cp -v ./nomount/kernel/src/* ./fs/
+
     - name: Build KernelSU-Next apk
       if: env.BUILD_KSU_MANAGER == 'true'
       run: |
