@@ -78,7 +78,7 @@ jobs:
     - name: Setup NoMount
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        git clone https://github.com/maxsteeel/nomount.git nomount
+        git clone https://github.com/maxsteeel/nomount.git -b dev nomount
         patch -p1 < ./nomount/kernel/patches/nomount_4.14_kernel_integration.patch
         cp -v ./nomount/kernel/src/* ./fs/
         echo "CONFIG_NOMOUNT=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
