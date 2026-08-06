@@ -86,11 +86,8 @@ jobs:
       if: env.ENABLE_KERNELSU == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        git clone ${{ env.KERNELSU_SOURCE }} -b ${{ env.KERNELSU_BRANCH }} KernelSU
-        ln -fsrv KernelSU/kernel drivers/kernelsu
+        curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash
         echo "UPLOADNAME=-${{ env.KERNELSU_REPO_NAME }}-${{ env.KERNELSU_BRANCH }}" >> $GITHUB_ENV
-        sed -i 's/atomic_inc_not_zero/atomic_long_inc_not_zero/' KernelSU/kernel/Makefile
-        patch -p1 < $GITHUB_WORKSPACE/patch/ksu.patch
         patch -p1 < $GITHUB_WORKSPACE/patch/ksu_hook.patch
 
         # Susfs setup

@@ -1,12 +1,39 @@
+diff --git a/drivers/input/input.c b/drivers/input/input.c
+index f9f3d6261..00d118820 100644
+--- a/drivers/input/input.c
++++ b/drivers/input/input.c
+@@ -436,11 +436,22 @@ static void input_handle_event(struct input_dev *dev,
+  * to 'seed' initial state of a switch or initial position of absolute
+  * axis, etc.
+  */
++#ifdef CONFIG_KSU_MANUAL_HOOK
++extern bool ksu_input_hook __read_mostly;
++extern __attribute__((cold)) int ksu_handle_input_handle_event(
++			unsigned int *type, unsigned int *code, int *value);
++#endif
++
+ void input_event(struct input_dev *dev,
+ 		 unsigned int type, unsigned int code, int value)
+ {
+ 	unsigned long flags;
+ 
++#ifdef CONFIG_KSU_MANUAL_HOOK
++	if (unlikely(ksu_input_hook))
++		ksu_handle_input_handle_event(&type, &code, &value);
++#endif
++
+ 	if (is_event_supported(type, dev->evbit, EV_MAX)) {
+ 
+ 		spin_lock_irqsave(&dev->event_lock, flags);
 diff --git a/fs/exec.c b/fs/exec.c
-index 8d5ae3de8..f449f7ba7 100644
+index 8d5ae3de8..d359c5084 100644
 --- a/fs/exec.c
 +++ b/fs/exec.c
 @@ -1868,12 +1868,21 @@ static int do_execveat_common(int fd, struct filename *filename,
  	return retval;
  }
  
-+#ifdef CONFIG_KSU
++#ifdef CONFIG_KSU_MANUAL_HOOK
 +__attribute__((hot))
 +extern int ksu_handle_execveat(int *fd, struct filename **filename_ptr,
 +				void *argv, void *envp, int *flags);
@@ -18,7 +45,7 @@ index 8d5ae3de8..f449f7ba7 100644
  {
  	struct user_arg_ptr argv = { .ptr.native = __argv };
  	struct user_arg_ptr envp = { .ptr.native = __envp };
-+#ifdef CONFIG_KSU
++#ifdef CONFIG_KSU_MANUAL_HOOK
 +	ksu_handle_execveat((int *)AT_FDCWD, &filename, &argv, &envp, 0);
 +#endif
  	return do_execveat_common(AT_FDCWD, filename, argv, envp, 0);
@@ -28,21 +55,21 @@ index 8d5ae3de8..f449f7ba7 100644
  		.is_compat = true,
  		.ptr.compat = __envp,
  	};
-+	#ifdef CONFIG_KSU // 32-bit ksud and 32-on-64 support
-+		ksu_handle_execveat((int *)AT_FDCWD, &filename, &argv, &envp, 0);
-+	#endif
++#ifdef CONFIG_KSU_MANUAL_HOOK // 32-bit ksud and 32-on-64 support
++	ksu_handle_execveat((int *)AT_FDCWD, &filename, &argv, &envp, 0);
++#endif
  	return do_execveat_common(AT_FDCWD, filename, argv, envp, 0);
  }
  
 diff --git a/fs/open.c b/fs/open.c
-index 0628bd1ae..da208117d 100644
+index 0628bd1ae..fec75b4fb 100644
 --- a/fs/open.c
 +++ b/fs/open.c
 @@ -354,6 +354,12 @@ SYSCALL_DEFINE4(fallocate, int, fd, int, mode, loff_t, offset, loff_t, len)
  	return error;
  }
  
-+#ifdef CONFIG_KSU
++#ifdef CONFIG_KSU_MANUAL_HOOK
 +__attribute__((hot))
 +extern int ksu_handle_faccessat(int *dfd, const char __user **filename_user,
 +				int *mode, int *flags);
@@ -55,7 +82,7 @@ index 0628bd1ae..da208117d 100644
  	int res;
  	unsigned int lookup_flags = LOOKUP_FOLLOW;
  
-+#ifdef CONFIG_KSU
++#ifdef CONFIG_KSU_MANUAL_HOOK
 +	ksu_handle_faccessat(&dfd, &filename, &mode, NULL);
 +#endif
 +
@@ -63,15 +90,15 @@ index 0628bd1ae..da208117d 100644
  		return -EINVAL;
  
 diff --git a/fs/read_write.c b/fs/read_write.c
-index 0da6e4f19..9a8709c12 100644
+index 0da6e4f19..69744e8fd 100644
 --- a/fs/read_write.c
 +++ b/fs/read_write.c
-@@ -568,11 +568,22 @@ static inline void file_pos_write(struct file *file, loff_t pos)
+@@ -568,11 +568,21 @@ static inline void file_pos_write(struct file *file, loff_t pos)
  		file->f_pos = pos;
  }
  
-+#ifdef CONFIG_KSU
-+extern bool ksu_vfs_read_hook __read_mostly;
++#ifdef CONFIG_KSU_MANUAL_HOOK
++extern bool ksu_init_rc_hook __read_mostly;
 +extern __attribute__((cold)) int ksu_handle_sys_read(unsigned int fd,
 +				char __user **buf_ptr, size_t *count_ptr);
 +#endif
@@ -81,89 +108,124 @@ index 0da6e4f19..9a8709c12 100644
  	struct fd f = fdget_pos(fd);
  	ssize_t ret = -EBADF;
  
-+#ifdef CONFIG_KSU
-+	if (unlikely(ksu_vfs_read_hook))
++#ifdef CONFIG_KSU_MANUAL_HOOK
++	if (unlikely(ksu_init_rc_hook))
 +		ksu_handle_sys_read(fd, &buf, &count);
 +#endif
-+
  	if (f.file) {
  		loff_t pos = file_pos_read(f.file);
  		ret = vfs_read(f.file, buf, count, &pos);
 diff --git a/fs/stat.c b/fs/stat.c
-index 0fda4b6b8..cb60c65bc 100644
+index 0fda4b6b8..bb9559bdf 100644
 --- a/fs/stat.c
 +++ b/fs/stat.c
-@@ -353,6 +353,12 @@ SYSCALL_DEFINE2(newlstat, const char __user *, filename,
+@@ -353,6 +353,17 @@ SYSCALL_DEFINE2(newlstat, const char __user *, filename,
  	return cp_new_stat(&stat, statbuf);
  }
  
-+#ifdef CONFIG_KSU
++#ifdef CONFIG_KSU_MANUAL_HOOK
 +__attribute__((hot))
 +extern int ksu_handle_stat(int *dfd, const char __user **filename_user,
 +				int *flags);
++
++extern void ksu_handle_newfstat_ret(unsigned int *fd, struct stat __user **statbuf_ptr);
++#if defined(__ARCH_WANT_STAT64) || defined(__ARCH_WANT_COMPAT_STAT64)
++extern void ksu_handle_fstat64_ret(unsigned long *fd, struct stat64 __user **statbuf_ptr); // optional
++#endif
 +#endif
 +
  #if !defined(__ARCH_WANT_STAT64) || defined(__ARCH_WANT_SYS_NEWFSTATAT)
  SYSCALL_DEFINE4(newfstatat, int, dfd, const char __user *, filename,
  		struct stat __user *, statbuf, int, flag)
-@@ -360,6 +366,10 @@ SYSCALL_DEFINE4(newfstatat, int, dfd, const char __user *, filename,
+@@ -360,6 +371,10 @@ SYSCALL_DEFINE4(newfstatat, int, dfd, const char __user *, filename,
  	struct kstat stat;
  	int error;
  
-+#ifdef CONFIG_KSU
++#ifdef CONFIG_KSU_MANUAL_HOOK
 +	ksu_handle_stat(&dfd, &filename, &flag);
 +#endif
 +
  	error = vfs_fstatat(dfd, filename, &stat, flag);
  	if (error)
  		return error;
-diff --git a/drivers/input/input.c b/drivers/input/input.c
-index f9f3d6261..f7f3e02a9 100644
---- a/drivers/input/input.c
-+++ b/drivers/input/input.c
-@@ -377,11 +377,21 @@ static int input_get_disposition(struct input_dev *dev,
- 	return disposition;
+@@ -375,6 +390,9 @@ SYSCALL_DEFINE2(newfstat, unsigned int, fd, struct stat __user *, statbuf)
+ 	if (!error)
+ 		error = cp_new_stat(&stat, statbuf);
+ 
++#ifdef CONFIG_KSU_MANUAL_HOOK
++	ksu_handle_newfstat_ret(&fd, &statbuf);
++#endif
+ 	return error;
  }
  
-+#ifdef CONFIG_KSU
-+extern bool ksu_input_hook __read_mostly;
-+extern int ksu_handle_input_handle_event(unsigned int *type, unsigned int *code, int *value);
-+#endif
-+
- static void input_handle_event(struct input_dev *dev,
- 			       unsigned int type, unsigned int code, int value)
- {
- 	int disposition = input_get_disposition(dev, type, code, &value);
+@@ -495,6 +513,9 @@ SYSCALL_DEFINE2(fstat64, unsigned long, fd, struct stat64 __user *, statbuf)
+ 	if (!error)
+ 		error = cp_new_stat64(&stat, statbuf);
  
-+	#ifdef CONFIG_KSU
-+		if (unlikely(ksu_input_hook))
-+			ksu_handle_input_handle_event(&type, &code, &value);
-+	#endif
-+
- 	if (disposition != INPUT_IGNORE_EVENT && type != EV_SYN)
- 		add_input_randomness(type, code, value);
-
-diff --git a/fs/devpts/inode.c b/fs/devpts/inode.c
-index 32f6f1c68..ed4c46169 100644
---- a/fs/devpts/inode.c
-+++ b/fs/devpts/inode.c
-@@ -602,6 +602,9 @@ struct dentry *devpts_pty_new(struct pts_fs_info *fsi, int index, void *priv)
- 	return dentry;
++#ifdef CONFIG_KSU_MANUAL_HOOK // for 32-bit
++	ksu_handle_fstat64_ret(&fd, &statbuf);
++#endif
+ 	return error;
  }
  
-+#ifdef CONFIG_KSU
-+extern int ksu_handle_devpts(struct inode*);
+@@ -504,6 +525,9 @@ SYSCALL_DEFINE4(fstatat64, int, dfd, const char __user *, filename,
+ 	struct kstat stat;
+ 	int error;
+ 
++#ifdef CONFIG_KSU_MANUAL_HOOK // 32-bit su
++	ksu_handle_stat(&dfd, &filename, &flag);
 +#endif
- /**
-  * devpts_get_priv -- get private data for a slave
-  * @pts_inode: inode of the slave
-@@ -610,6 +613,9 @@ struct dentry *devpts_pty_new(struct pts_fs_info *fsi, int index, void *priv)
+ 	error = vfs_fstatat(dfd, filename, &stat, flag);
+ 	if (error)
+ 		return error;
+diff --git a/kernel/reboot.c b/kernel/reboot.c
+index e40e52c55..90d7aefff 100644
+--- a/kernel/reboot.c
++++ b/kernel/reboot.c
+@@ -277,6 +277,11 @@ static DEFINE_MUTEX(reboot_mutex);
+  *
+  * reboot doesn't sync: do that yourself before calling this.
   */
- void *devpts_get_priv(struct dentry *dentry)
++
++#ifdef CONFIG_KSU_MANUAL_HOOK
++extern int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd, void __user **arg);
++#endif
++
+ SYSCALL_DEFINE4(reboot, int, magic1, int, magic2, unsigned int, cmd,
+ 		void __user *, arg)
  {
-+	#ifdef CONFIG_KSU
-+	ksu_handle_devpts(dentry->d_inode);
-+	#endif
- 	if (dentry->d_sb->s_magic != DEVPTS_SUPER_MAGIC)
- 		return NULL;
- 	return dentry->d_fsdata;
+@@ -284,6 +289,9 @@ SYSCALL_DEFINE4(reboot, int, magic1, int, magic2, unsigned int, cmd,
+ 	char buffer[256];
+ 	int ret = 0;
+ 
++#ifdef CONFIG_KSU_MANUAL_HOOK
++	ksu_handle_sys_reboot(magic1, magic2, cmd, &arg);
++#endif
+ 	/* We only trust the superuser with rebooting the system. */
+ 	if (!ns_capable(pid_ns->user_ns, CAP_SYS_BOOT))
+ 		return -EPERM;
+diff --git a/kernel/sys.c b/kernel/sys.c
+index 71b350117..d273fcecd 100644
+--- a/kernel/sys.c
++++ b/kernel/sys.c
+@@ -590,6 +590,9 @@ SYSCALL_DEFINE1(setuid, uid_t, uid)
+ 	return retval;
+ }
+ 
++#ifdef CONFIG_KSU_MANUAL_HOOK
++extern int ksu_handle_setresuid(uid_t ruid, uid_t euid, uid_t suid);
++#endif
+ 
+ /*
+  * This function implements a generic ability to update ruid, euid,
+@@ -603,6 +606,10 @@ SYSCALL_DEFINE3(setresuid, uid_t, ruid, uid_t, euid, uid_t, suid)
+ 	int retval;
+ 	kuid_t kruid, keuid, ksuid;
+ 
++#ifdef CONFIG_KSU_MANUAL_HOOK
++       (void)ksu_handle_setresuid(ruid, euid, suid);
++#endif
++
+ 	kruid = make_kuid(ns, ruid);
+ 	keuid = make_kuid(ns, euid);
+ 	ksuid = make_kuid(ns, suid);
