@@ -30,7 +30,6 @@ jobs:
         echo "APPLY_CUSTOM_PATCH=$(cat config.env | grep "APPLY_CUSTOM_PATCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "ENABLE_KERNELSU=$(cat config.env | grep "ENABLE_KERNELSU" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "ENABLE_SUSFS=$(cat config.env | grep "ENABLE_SUSFS" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
-        echo "BUILD_KSU_MANAGER=$(cat config.env | grep "BUILD_KSU_MANAGER" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "KERNELSU_SOURCE=$(cat config.env | grep "KERNELSU_SOURCE" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "KERNELSU_BRANCH=$(cat config.env | grep "KERNELSU_BRANCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "KERNELSU_REPO_NAME=$(cat config.env | grep "KERNELSU_SOURCE" | head -n 1 | cut -d "=" -f 2 | awk -F "/" '{print $NF}' | sed 's/.git$//')" >> $GITHUB_ENV
@@ -89,17 +88,16 @@ jobs:
         curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash
         echo "UPLOADNAME=-${{ env.KERNELSU_REPO_NAME }}-${{ env.KERNELSU_BRANCH }}" >> $GITHUB_ENV
         echo "CONFIG_KSU=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_KSU_MANUAL_HOOK=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         patch -p1 < $GITHUB_WORKSPACE/patch/ksu_hook.patch
 
         # Susfs setup
         if [ ${{ env.ENABLE_SUSFS }} = true ]; then
-          cd KernelSU
-          patch -p1 < $GITHUB_WORKSPACE/patch/ksu_susfs.patch
-          cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-          patch -p1 < $GITHUB_WORKSPACE/patch/susfs.patch
-          echo "CONFIG_KSU=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+          git clone https://github.com/JackA1ltman/NonGKI_Kernel_Build_2nd.git
+          patch -p1 < ./NonGKI_Kernel_Build_2nd/Patches/Patch/susfs_patch_to_4.14.patch
+          bash ./NonGKI_Kernel_Build_2nd/Patches/susfs_inline_hook_patches.sh
           echo "CONFIG_KSU_SUSFS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+        else
+          echo "CONFIG_KSU_MANUAL_HOOK=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         fi
 
     - name: Setup NoMount
@@ -108,15 +106,6 @@ jobs:
         git clone https://github.com/maxsteeel/nomount.git -b dev nomount
         patch -p1 < ./nomount/kernel/patches/nomount_4.14_kernel_integration.patch
         cp -v ./nomount/kernel/src/* ./fs/
-
-    - name: Build KernelSU-Next apk
-      if: env.BUILD_KSU_MANAGER == 'true'
-      run: |
-        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/KernelSU
-        ./manager/spoof
-        ./manager/setup.sh
-        [[ -f manager/app/build/outputs/apk/release/KernelSU_Next_v*.apk ]] && \
-          ls -lah manager/app/build/outputs/apk/release/KernelSU_Next_v*.apk
 
     - name: Setup Configuration for Kernel
       run: |
