@@ -30,6 +30,7 @@ jobs:
         echo "APPLY_CUSTOM_PATCH=$(cat config.env | grep "APPLY_CUSTOM_PATCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "ENABLE_KERNELSU=$(cat config.env | grep "ENABLE_KERNELSU" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "ENABLE_SUSFS=$(cat config.env | grep "ENABLE_SUSFS" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
+        echo "ENABLE_NOMOUNT=$(cat config.env | grep "ENABLE_NOMOUNT" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "KERNELSU_SOURCE=$(cat config.env | grep "KERNELSU_SOURCE" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "KERNELSU_BRANCH=$(cat config.env | grep "KERNELSU_BRANCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "KERNELSU_REPO_NAME=$(cat config.env | grep "KERNELSU_SOURCE" | head -n 1 | cut -d "=" -f 2 | awk -F "/" '{print $NF}' | sed 's/.git$//')" >> $GITHUB_ENV
@@ -101,12 +102,14 @@ jobs:
         fi
 
     - name: Setup NoMount
+      if: env.ENABLE_NOMOUNT == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        git clone https://github.com/maxsteeel/nomount.git -b master nomount
-        bash ./NonGKI_Kernel_Build_2nd/Patches/NoMount/nomount_patches.sh
-        #patch -p1 < ./nomount/kernel/patches/nomount_4.14_kernel_integration.patch
+        git clone https://github.com/maxsteeel/nomount.git nomount
+        # bash ./NonGKI_Kernel_Build_2nd/Patches/NoMount/nomount_patches.sh
+        patch -p1 < ./nomount/kernel/patches/nomount_4.14_kernel_integration.patch
         cp -v ./nomount/kernel/src/* ./fs/
+        echo "CONFIG_NOMOUNT=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
 
     - name: Setup Configuration for Kernel
       run: |
@@ -152,7 +155,7 @@ jobs:
         export SUBARCH=${{ env.ARCH }}
         export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
         export KBUILD_BUILD_HOST=ubuntu
-        export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
+        export KBUILD_BUILD_USER=admin
         export DTC_EXT=dtc
         export CCACHE_DIR=~/.ccache
         export USE_CCACHE=1
