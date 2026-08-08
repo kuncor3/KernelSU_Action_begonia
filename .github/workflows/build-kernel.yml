@@ -87,7 +87,7 @@ jobs:
         echo "kernel version: $KERNEL_VER"
         echo "KERNEL_VERSION=$KERNEL_VER" >> $GITHUB_ENV
 
-    - name: Setup ReSukiSU
+    - name: Setup ${{ env.KERNELSU_REPO_NAME }}
       if: env.ENABLE_KERNELSU == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
