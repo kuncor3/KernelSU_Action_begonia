@@ -81,6 +81,7 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         git clone ${{ env.KERNEL_SOURCE }} -b ${{ env.KERNEL_SOURCE_BRANCH }} android-kernel --depth=1
+        cd android-kernel
         KERNEL_VER=$(grep -E "(^VERSION|^PATCHLEVEL)" ./Makefile | awk '{print $NF}' | tr '\n' '.')
         echo "KERNEL_VERSION=$KERNEL_VER" >> $GITHUB_ENV
 
