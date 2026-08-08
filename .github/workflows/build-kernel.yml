@@ -81,21 +81,25 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         git clone ${{ env.KERNEL_SOURCE }} -b ${{ env.KERNEL_SOURCE_BRANCH }} android-kernel --depth=1
+        KERNER_VER=$(grep -E "(^VERSION|^PATCHLEVEL)" ./Makefile | awk '{print $NF}' | tr '\n' '.')
+        echo "KERNEL_VERSION=$KERNEL_VER" >> $GITHUB_ENV
 
     - name: Setup ReSukiSU
       if: env.ENABLE_KERNELSU == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash
-        echo "UPLOADNAME=-${{ env.KERNELSU_REPO_NAME }}-${{ env.KERNELSU_BRANCH }}" >> $GITHUB_ENV
+        echo "UPLOADNAME=+${{ env.KERNELSU_REPO_NAME }}-${{ env.KERNELSU_BRANCH }}" >> $GITHUB_ENV
         echo "CONFIG_KSU=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
 
         # Susfs setup
         if [ ${{ env.ENABLE_SUSFS }} = true ]; then
           git clone https://github.com/JackA1ltman/NonGKI_Kernel_Build_2nd.git
-          patch -p1 < ./NonGKI_Kernel_Build_2nd/Patches/Patch/susfs_patch_to_4.14.patch
+          patch -p1 < ./NonGKI_Kernel_Build_2nd/Patches/Patch/susfs_patch_to_${{ env.KERNEL_VERSION }}.patch
           bash ./NonGKI_Kernel_Build_2nd/Patches/susfs_inline_hook_patches.sh
           echo "CONFIG_KSU_SUSFS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+          SUS_VER=$(grep 'SUSFS_VERSION' ./include/linux/susfs.h | awk '{print $NF}' | sed 's/"//g')
+          echo "WITH_SUSFS=+susfs-$SUS_VER" >> $GITHUB_ENV
         else
           echo "CONFIG_KSU_MANUAL_HOOK=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
           patch -p1 < $GITHUB_WORKSPACE/patch/ksu_hook.patch
@@ -105,11 +109,11 @@ jobs:
       if: env.ENABLE_NOMOUNT == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        git clone https://github.com/maxsteeel/nomount.git nomount
-        # bash ./NonGKI_Kernel_Build_2nd/Patches/NoMount/nomount_patches.sh
-        patch -p1 < ./nomount/kernel/patches/nomount_4.14_kernel_integration.patch
+        git clone https://github.com/maxsteeel/nomount.git -b dev nomount
+        patch -p1 < ./nomount/kernel/patches/nomount_${{ env.KERNEL_VERSION }}_kernel_integration.patch
         cp -v ./nomount/kernel/src/* ./fs/
         echo "CONFIG_NOMOUNT=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+        echo "WITH_NOMOUNT=+nomount" >> $GITHUB_ENV
 
     - name: Setup Configuration for Kernel
       run: |
@@ -155,7 +159,7 @@ jobs:
         export SUBARCH=${{ env.ARCH }}
         export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
         export KBUILD_BUILD_HOST=ubuntu
-        export KBUILD_BUILD_USER=admin
+        export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
         export DTC_EXT=dtc
         export CCACHE_DIR=~/.ccache
         export USE_CCACHE=1
@@ -201,14 +205,14 @@ jobs:
       if: env.CHECK_FILE_IS_OK == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.KERNEL_FILE }}${{ env.UPLOADNAME }}-${{ env.DEVICE }}-${{ env.BUILD_TIME }}-Image-only
+        name: ${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}-${{ env.BUILD_TIME }}-Image-only
         path: kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }}
 
     - name: Upload Kernel Full (config, boot, modules)
       if: env.CHECK_FILE_IS_OK == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.KERNEL_FILE }}${{ env.UPLOADNAME }}-${{ env.DEVICE }}-${{ env.BUILD_TIME }}-full
+        name: ${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}-${{ env.BUILD_TIME }}-full
         path: kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/
 
     - name: Upload build log
