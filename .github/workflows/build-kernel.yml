@@ -116,7 +116,7 @@ jobs:
         #git clone https://github.com/maxsteeel/nomount.git -b ${{ env.NOMOUNT_BRANCH }} nomount
         #patch -p1 < ./nomount/kernel/patches/nomount_${{ env.KERNEL_VERSION }}_kernel_integration.patch
         #cp -v ./nomount/kernel/src/nomount.* ./fs/nomount
-        wget -O- https://raw.githubusercontent.com/maxsteeel/nomount/refs/heads/experimental/hookless/kernel/setup.sh | bash -s 'experimental/hookless'
+        wget -O- https://raw.githubusercontent.com/maxsteeel/nomount/refs/heads/experimental/hookless/kernel/setup.sh | bash -s ${{ env.NOMOUNT_BRANCH }}
         echo "CONFIG_NOMOUNT=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         echo "WITH_NOMOUNT=+nomount" >> $GITHUB_ENV
 
