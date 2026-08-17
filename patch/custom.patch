@@ -34,17 +34,33 @@ index 2cb0b92f4..cb49895d7 100755
  
  		# All done with mercurial
 diff --git a/drivers/cpufreq/cpufreq_interactive.c b/drivers/cpufreq/cpufreq_interactive.c
-index f6ad9f27d..7cf447d90 100644
+index f6ad9f27d..05fc9e9e0 100644
 --- a/drivers/cpufreq/cpufreq_interactive.c
 +++ b/drivers/cpufreq/cpufreq_interactive.c
-@@ -1331,6 +1331,10 @@ void cpufreq_interactive_limits(struct cpufreq_policy *policy)
- 	}
+@@ -1332,16 +1332,16 @@ void cpufreq_interactive_limits(struct cpufreq_policy *policy)
  }
  
-+#ifndef TRANSITION_LATENCY_LIMIT
-+#define TRANSITION_LATENCY_LIMIT   (8 * 800 * 800)
-+#endif
-+
  static struct interactive_governor interactive_gov = {
- 	.gov = {
- 		.name			= "interactive",
+-	.gov = {
+-		.name			= "interactive",
+-		.max_transition_latency	= TRANSITION_LATENCY_LIMIT,
+-		.owner			= THIS_MODULE,
+-		.init			= cpufreq_interactive_init,
+-		.exit			= cpufreq_interactive_exit,
+-		.start			= cpufreq_interactive_start,
+-		.stop			= cpufreq_interactive_stop,
+-		.limits			= cpufreq_interactive_limits,
+-	}
++    .gov = {
++        .name           = "interactive",
++        .owner          = THIS_MODULE,
++        .dynamic_switching = true,   // tambahin ini, wajib di kernel baru
++        .init           = cpufreq_interactive_init,
++        .exit           = cpufreq_interactive_exit,
++        .start          = cpufreq_interactive_start,
++        .stop           = cpufreq_interactive_stop,
++        .limits         = cpufreq_interactive_limits,
++    }
+ };
+ 
+ static void cpufreq_interactive_nop_timer(unsigned long data)
