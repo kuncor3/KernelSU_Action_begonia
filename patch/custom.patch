@@ -33,3 +33,18 @@ index 2cb0b92f4..cb49895d7 100755
  		esac
  
  		# All done with mercurial
+diff --git a/drivers/cpufreq/cpufreq_interactive.c b/drivers/cpufreq/cpufreq_interactive.c
+index f6ad9f27d..7cf447d90 100644
+--- a/drivers/cpufreq/cpufreq_interactive.c
++++ b/drivers/cpufreq/cpufreq_interactive.c
+@@ -1331,6 +1331,10 @@ void cpufreq_interactive_limits(struct cpufreq_policy *policy)
+ 	}
+ }
+ 
++#ifndef TRANSITION_LATENCY_LIMIT
++#define TRANSITION_LATENCY_LIMIT   (8 * 800 * 800)
++#endif
++
+ static struct interactive_governor interactive_gov = {
+ 	.gov = {
+ 		.name			= "interactive",
