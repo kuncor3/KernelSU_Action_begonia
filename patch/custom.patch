@@ -54,7 +54,7 @@ index f6ad9f27d..05fc9e9e0 100644
 +    .gov = {
 +        .name           = "interactive",
 +        .owner          = THIS_MODULE,
-+        .dynamic_switching = true,   // tambahin ini, wajib di kernel baru
++        .dynamic_switching = true,
 +        .init           = cpufreq_interactive_init,
 +        .exit           = cpufreq_interactive_exit,
 +        .start          = cpufreq_interactive_start,
