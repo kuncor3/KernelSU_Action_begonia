@@ -138,7 +138,6 @@ jobs:
         if [ -f $GITHUB_WORKSPACE/extra_kernel_config ]; then
           while IFS= read -r i || [ -n "$i" ]; do
             [ -z "$i" ] && continue
-            # Skip commented lines (starting with #)
             [[ "$i" =~ ^#.* ]] && continue
             f=$(echo "$i" | cut -d= -f1)
             if grep -q "^${f}=" arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}; then
