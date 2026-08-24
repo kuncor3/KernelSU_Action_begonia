@@ -208,28 +208,28 @@ jobs:
 
     - name: Prepare kernel files
       run: |
-        mkdir -p $GITHUB_WORKSPACE/upload
+        mkdir -p $GITHUB_WORKSPACE/00001
         [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }} ] && \
-          cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }} $GITHUB_WORKSPACE/upload/Kernel
+          cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }} $GITHUB_WORKSPACE/00001/Kernel
         [ -d $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/certs ] && \
-          cp -rv $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/certs $GITHUB_WORKSPACE/upload
-        cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/.config $GITHUB_WORKSPACE/upload/kernel_configs.txt
-        cp -v $GITHUB_WORKSPACE/build.log $GITHUB_WORKSPACE/upload/build.log
-        find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out -type f -name "*.ko" | while read file; do cp -rv $file $GITHUB_WORKSPACE/upload; done
+          cp -rv $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/certs $GITHUB_WORKSPACE/00001
+        cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/.config $GITHUB_WORKSPACE/00001/kernel_configs.txt
+        cp -v $GITHUB_WORKSPACE/build.log $GITHUB_WORKSPACE/00001/build.log
+        find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out -type f -name "*.ko" | while read file; do cp -rv $file $GITHUB_WORKSPACE/00001; done
 
     - name: Upload Kernel Image only
       if: env.CHECK_FILE_IS_OK == 'true'
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}${{ env.WITH_BBG }}-${{ env.BUILD_TIME }}-Image-only
-        path: $GITHUB_WORKSPACE/upload/${{ env.KERNEL_FILE }}
+        path: $GITHUB_WORKSPACE/00001/${{ env.KERNEL_FILE }}
 
     - name: Upload Kernel Full (config, boot, modules)
       if: env.CHECK_FILE_IS_OK == 'true'
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}${{ env.WITH_BBG }}-${{ env.BUILD_TIME }}-full
-        path: $GITHUB_WORKSPACE/upload/
+        path: $GITHUB_WORKSPACE/00001/
 
     - name: Upload build log
       if: always()
