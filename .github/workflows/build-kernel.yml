@@ -113,10 +113,7 @@ jobs:
       if: env.ENABLE_NOMOUNT == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        #git clone https://github.com/maxsteeel/nomount.git -b ${{ env.NOMOUNT_BRANCH }} nomount
-        #patch -p1 < ./nomount/kernel/patches/nomount_${{ env.KERNEL_VERSION }}_kernel_integration.patch
-        #cp -v ./nomount/kernel/src/nomount.* ./fs/nomount
-        wget -O- https://raw.githubusercontent.com/maxsteeel/nomount/refs/heads/experimental/hookless/kernel/setup.sh | bash -s ${{ env.NOMOUNT_BRANCH }}
+        wget -O- https://github.com/maxsteeel/nomount/raw/refs/heads/dev/kernel/setup.sh | bash -s ${{ env.NOMOUNT_BRANCH }}
         echo "CONFIG_NOMOUNT=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         echo "WITH_NOMOUNT=+nomount" >> $GITHUB_ENV
 
@@ -130,12 +127,16 @@ jobs:
 
     - name: Setup Configuration for Kernel
       run: |
-        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         if [ ${{ env.APPLY_CUSTOM_PATCH }} = true ] && [ -f $GITHUB_WORKSPACE/patch/custom.patch ]; then
+           cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
            patch -p1 < $GITHUB_WORKSPACE/patch/custom.patch
         fi
 
         if [ -f $GITHUB_WORKSPACE/extra_kernel_config ]; then
+          if [ ${{ env.DISABLE-LTO }} == true ]; then
+            echo "CONFIG_LTO=n" >> $GITHUB_WORKSPACE/extra_kernel_config
+            echo "CONFIG_LTO_CLANG=n" >> $GITHUB_WORKSPACE/extra_kernel_config
+          fi
           while IFS= read -r i || [ -n "$i" ]; do
             [ -z "$i" ] && continue
             [[ "$i" =~ ^#.* ]] && continue
@@ -210,12 +211,11 @@ jobs:
       run: |
         mkdir -p $GITHUB_WORKSPACE/00001
         [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }} ] && \
-          cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }} $GITHUB_WORKSPACE/00001/Kernel
-        [ -d $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/certs ] && \
-          cp -rv $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/certs $GITHUB_WORKSPACE/00001
+          cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }} $GITHUB_WORKSPACE/00001/
         cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/.config $GITHUB_WORKSPACE/00001/kernel_configs.txt
         cp -v $GITHUB_WORKSPACE/build.log $GITHUB_WORKSPACE/00001/build.log
-        find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out -type f -name "*.ko" | while read file; do cp -rv $file $GITHUB_WORKSPACE/00001; done
+        find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/certs -type f -name "signing_key.*" -exec cp -v {} $GITHUB_WORKSPACE/00001/ \;
+        find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out -type f -name "*.ko" -exec cp -v {} $GITHUB_WORKSPACE/00001/ \;
 
     - name: Upload Kernel Image only
       if: env.CHECK_FILE_IS_OK == 'true'
