@@ -213,7 +213,7 @@ jobs:
         [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }} ] && \
           cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }} $GITHUB_WORKSPACE/00001/
         cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/.config $GITHUB_WORKSPACE/00001/kernel_configs.txt
-        cp -v $GITHUB_WORKSPACE/build.log $GITHUB_WORKSPACE/00001/build.log
+        cp -v $GITHUB_WORKSPACE/build.log $GITHUB_WORKSPACE/00001/
         find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/certs -type f -name "signing_key.*" -exec cp -v {} $GITHUB_WORKSPACE/00001/ \;
         find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out -type f -name "*.ko" -exec cp -v {} $GITHUB_WORKSPACE/00001/ \;
 
