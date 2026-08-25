@@ -222,14 +222,14 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}${{ env.WITH_BBG }}-${{ env.BUILD_TIME }}-Image-only
-        path: $GITHUB_WORKSPACE/00001/${{ env.KERNEL_FILE }}
+        path: 00001/${{ env.KERNEL_FILE }}
 
     - name: Upload Kernel Full (config, boot, modules)
       if: env.CHECK_FILE_IS_OK == 'true'
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}${{ env.WITH_BBG }}-${{ env.BUILD_TIME }}-full
-        path: $GITHUB_WORKSPACE/00001/
+        path: 00001/
 
     - name: Upload build log
       if: always()
