@@ -113,7 +113,7 @@ jobs:
       if: env.ENABLE_NOMOUNT == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        wget -O- https://github.com/maxsteeel/nomount/raw/refs/heads/dev/kernel/setup.sh | bash -s ${{ env.NOMOUNT_BRANCH }}
+        wget -O- https://github.com/maxsteeel/nomount/raw/refs/heads/master/kernel/setup.sh | bash -s ${{ env.NOMOUNT_BRANCH }}
         echo "CONFIG_NOMOUNT=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         echo "WITH_NOMOUNT=+nomount" >> $GITHUB_ENV
 
