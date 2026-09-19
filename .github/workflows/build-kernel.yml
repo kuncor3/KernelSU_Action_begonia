@@ -116,10 +116,10 @@ jobs:
       if: env.ENABLE_NOMOUNT == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        curl https://raw.githubusercontent.com/maxsteeel/nomount/refs/heads/dev/kernel/setup.sh | bash -
-        cd NoMount
-        git checkout b8d2683
-        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        curl https://raw.githubusercontent.com/maxsteeel/nomount/refs/heads/dev/kernel/setup.sh | bash -s b8d2683
+        # cd NoMount
+        # git checkout b8d2683
+        # cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         echo "CONFIG_NOMOUNT=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         echo "WITH_NOMOUNT=+nomount" >> $GITHUB_ENV
 
