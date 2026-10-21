@@ -1,0 +1,65 @@
+diff --git a/kernel/Kbuild b/kernel/Kbuild
+index 518b1aec..8783e3bd 100644
+--- a/kernel/Kbuild
++++ b/kernel/Kbuild
+@@ -1,4 +1,5 @@
+ kernelsu-objs := core/init.o
++kernelsu-objs += core/build_info.o
+ kernelsu-objs += policy/allowlist.o
+ kernelsu-objs += policy/app_profile.o
+ kernelsu-objs += policy/feature.o
+@@ -57,6 +58,26 @@ KDIR := $(KDIR)
+ 
+ GIT_BIN := /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin git
+ 
++KSU_COMPONENTS_ROOT ?= $(srctree)
++
++KSU_SUSFS_VERSION ?= $(shell [ -f "$(KSU_COMPONENTS_ROOT)/include/linux/susfs.h" ] && sed -n 's/^#define SUSFS_VERSION "\(.*\)"/\1/p' $(KSU_COMPONENTS_ROOT)/include/linux/susfs.h 2>/dev/null)
++KSU_NOMOUNT_HEADER := $(firstword $(wildcard $(KSU_COMPONENTS_ROOT)/NoMount/kernel/src/nomount.h $(KSU_COMPONENTS_ROOT)/fs/nomount/nomount.h))
++KSU_NOMOUNT_VERSION ?= $(shell [ -n "$(KSU_NOMOUNT_HEADER)" ] && sed -n 's/^#define NOMOUNT_BASE_VERSION "\(.*\)"/\1/p' $(KSU_NOMOUNT_HEADER) 2>/dev/null)
++KSU_SUSFS_COMMIT ?= $(shell cd $(KSU_COMPONENTS_ROOT)/NonGKI_Kernel_Build_2nd 2>/dev/null && $(GIT_BIN) show --oneline -s 2>/dev/null | cut -d' ' -f1)
++KSU_NOMOUNT_COMMIT ?= $(shell cd $(KSU_COMPONENTS_ROOT)/NoMount 2>/dev/null && $(GIT_BIN) show --oneline -s 2>/dev/null | cut -d' ' -f1)
++
++KSU_SUSFS_VERSION := $(if $(strip $(KSU_SUSFS_VERSION)),$(KSU_SUSFS_VERSION),unknown)
++KSU_SUSFS_COMMIT := $(if $(strip $(KSU_SUSFS_COMMIT)),$(KSU_SUSFS_COMMIT),unknown)
++KSU_NOMOUNT_VERSION := $(if $(strip $(KSU_NOMOUNT_VERSION)),$(KSU_NOMOUNT_VERSION),unknown)
++KSU_NOMOUNT_COMMIT := $(if $(strip $(KSU_NOMOUNT_COMMIT)),$(KSU_NOMOUNT_COMMIT),unknown)
++
++ccflags-y += -DKSU_SUSFS_VERSION=\"$(KSU_SUSFS_VERSION)\"
++ccflags-y += -DKSU_SUSFS_COMMIT=\"$(KSU_SUSFS_COMMIT)\"
++ccflags-y += -DKSU_NOMOUNT_VERSION=\"$(KSU_NOMOUNT_VERSION)\"
++ccflags-y += -DKSU_NOMOUNT_COMMIT=\"$(KSU_NOMOUNT_COMMIT)\"
++
++$(info -- KSU build info: SUSFS=$(KSU_SUSFS_VERSION) ($(KSU_SUSFS_COMMIT)), NoMount=$(KSU_NOMOUNT_VERSION) ($(KSU_NOMOUNT_COMMIT)))
++
+ KSU_SRC := $(realpath $(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
+ 
+ LOCAL_GIT_EXISTS := $(shell test -e $(KSU_SRC)/../.git && echo 1 || echo 0)
+diff --git a/kernel/core/build_info.c b/kernel/core/build_info.c
+new file mode 100644
+index 00000000..65bb2a2a
+--- /dev/null
++++ b/kernel/core/build_info.c
+@@ -0,0 +1,22 @@
++// SPDX-License-Identifier: GPL-2.0
++#include <linux/module.h>
++#include <linux/moduleparam.h>
++
++#ifndef KSU_SUSFS_VERSION
++#define KSU_SUSFS_VERSION "unknown"
++#endif
++#ifndef KSU_SUSFS_COMMIT
++#define KSU_SUSFS_COMMIT "unknown"
++#endif
++#ifndef KSU_NOMOUNT_VERSION
++#define KSU_NOMOUNT_VERSION "unknown"
++#endif
++#ifndef KSU_NOMOUNT_COMMIT
++#define KSU_NOMOUNT_COMMIT "unknown"
++#endif
++
++static char ksu_build_info[192] = "SUSFS: " KSU_SUSFS_VERSION " (" KSU_SUSFS_COMMIT ")\n"
++                                  "NoMount: " KSU_NOMOUNT_VERSION " (" KSU_NOMOUNT_COMMIT ")";
++
++module_param_string(build_info, ksu_build_info, sizeof(ksu_build_info), 0444);
++MODULE_PARM_DESC(build_info, "SUSFS and NoMount versions and commits");
