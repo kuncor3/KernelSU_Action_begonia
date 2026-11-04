@@ -67,6 +67,12 @@ This is used to optimize the kernel, but sometimes it causes errors, so it is pr
 
 For debug kernel or build it separately
 
+### Lineage Hide kernel patch
+
+Set `ENABLE_LINEAGE_HIDE` to true to apply the Lineage Hide kernel-side injection scope hiding. The workflow clones `LINEAGE_HIDE_SOURCE` (`LINEAGE_HIDE_BRANCH`) and runs its `scripts/patch-kernel.sh` on the kernel tree after every other patch, so the path strings printed by `/proc/<pid>/fd/*`, `map_files/*`, `maps`, `smaps` and `numa_maps` no longer contain ROM names for application UIDs (`>= 10000`). Only the displayed string changes; file access is untouched.
+
+**This does not replace the Lineage Hide module.** The module plus SUSFS are still needed for Binder services, `org.lineageos.*` features, the resource package, protected broadcasts and system properties. Set `ENABLE_LINEAGE_HIDE=false` to skip it.
+
 ### Use Kprobes
 
 If your kernel Kprobes is working properly, changing this to "true" will automatically add the parameter to defconfig.

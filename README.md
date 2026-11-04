@@ -69,6 +69,12 @@ Fork 本仓库到你的储存库然后按照以下内容编辑config.env，之�
 
 是否使用 KernelSU，用于排查内核故障或单独编译内核
 
+### Lineage Hide 内核补丁
+
+将 `ENABLE_LINEAGE_HIDE` 设为 true，即可在编译前应用 Lineage Hide 的内核侧路径隐藏。工作流会克隆 `LINEAGE_HIDE_SOURCE`（`LINEAGE_HIDE_BRANCH`），并在其他补丁之后运行其 `scripts/patch-kernel.sh`，使应用进程（uid `>= 10000`）通过 `/proc/<pid>/fd/*`、`map_files/*`、`maps`、`smaps`、`numa_maps` 看到的路径字符串不再包含 ROM 名称。该补丁只改显示字符串，不影响文件访问。
+
+**它不能替代 Lineage Hide 模块。** Binder 服务、`org.lineageos.*` 特性、资源包、受保护广播和系统属性仍需模块与 SUSFS 处理。设为 `ENABLE_LINEAGE_HIDE=false` 可跳过。
+
 ### Use Kprobes
 
 如果你的内核 Kprobes 工作正常这项改成 true 即可自动在 defconfig 注入参数

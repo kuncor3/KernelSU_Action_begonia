@@ -36,6 +36,9 @@ jobs:
         echo "ENABLE_NOMOUNT=$(cat config.env | grep "ENABLE_NOMOUNT" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "NOMOUNT_BRANCH=$(cat config.env | grep "NOMOUNT_BRANCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "ENABLE_BBG=$(cat config.env | grep "ENABLE_BBG" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
+        echo "ENABLE_LINEAGE_HIDE=$(cat config.env | grep "ENABLE_LINEAGE_HIDE" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
+        echo "LINEAGE_HIDE_SOURCE=$(cat config.env | grep "LINEAGE_HIDE_SOURCE" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
+        echo "LINEAGE_HIDE_BRANCH=$(cat config.env | grep "LINEAGE_HIDE_BRANCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
 
     - name: Setup build kernel environment
       run: |
@@ -172,6 +175,16 @@ jobs:
          CLANG_TRIPLE=aarch64-linux-gnu- \
          CROSS_COMPILE=aarch64-linux-android- ${{ env.KERNEL_CONFIG }}
 
+    - name: Apply Lineage Hide kernel patch
+      if: env.ENABLE_LINEAGE_HIDE == 'true'
+      run: |
+        cd $GITHUB_WORKSPACE
+        git clone --depth=1 ${{ env.LINEAGE_HIDE_SOURCE }} -b ${{ env.LINEAGE_HIDE_BRANCH }} Lineage_Hide
+        bash Lineage_Hide/scripts/patch-kernel.sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        bash Lineage_Hide/scripts/selinux_hide_patch.sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        bash Lineage_Hide/scripts/patch-kernel.sh --check $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        echo "WITH_LINEAGE_HIDE=+lh" >> $GITHUB_ENV
+
     - name: Build kernel
       run: |
         set -o pipefail
@@ -228,14 +241,14 @@ jobs:
       if: env.CHECK_FILE_IS_OK == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}${{ env.WITH_BBG }}-${{ env.BUILD_TIME }}-Image-only
+        name: ${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}${{ env.WITH_BBG }}${{ env.WITH_LINEAGE_HIDE }}-${{ env.BUILD_TIME }}-Image-only
         path: 00001/${{ env.KERNEL_FILE }}
 
     - name: Upload Kernel Full (config, boot, modules)
       if: env.CHECK_FILE_IS_OK == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}${{ env.WITH_BBG }}-${{ env.BUILD_TIME }}-full
+        name: ${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}${{ env.WITH_BBG }}${{ env.WITH_LINEAGE_HIDE }}-${{ env.BUILD_TIME }}-full
         path: 00001/
 
     - name: Upload build log
