@@ -195,20 +195,21 @@ jobs:
 
     - name: Prepare kernel files
       run: |
-        mkdir -p $GITHUB_WORKSPACE/00001
+        mkdir -p $GITHUB_WORKSPACE/00001/${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}-${{ env.BUILD_TIME }}
+        echo UPLOAD_DIR=$GITHUB_WORKSPACE/00001/${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}-${{ env.BUILD_TIME }} >> $GITHUB_ENV
         [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }} ] && \
-          cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }} $GITHUB_WORKSPACE/00001/
-        cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/.config $GITHUB_WORKSPACE/00001/kernel_configs.txt
-        cp -v $GITHUB_WORKSPACE/build.log $GITHUB_WORKSPACE/00001/
-        find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/certs -type f -name "signing_key.*" -exec cp -v {} $GITHUB_WORKSPACE/00001/ \; 2>/dev/null || true
-        find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out -type f -name "*.ko" -exec cp -v {} $GITHUB_WORKSPACE/00001/ \;
+          cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }} ${{ env.UPLOAD_DIR }}/
+        cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/.config ${{ env.UPLOAD_DIR }}/kernel_configs.txt
+        cp -v $GITHUB_WORKSPACE/build.log ${{ env.UPLOAD_DIR }}/
+        find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/certs -type f -name "signing_key.*" -exec cp -v {} ${{ env.UPLOAD_DIR }}/ \; 2>/dev/null || true
+        find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out -type f -name "*.ko" -exec cp -v {} ${{ env.UPLOAD_DIR }}/ \;
 
     - name: Upload Kernel Image only
       if: env.CHECK_FILE_IS_OK == 'true'
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}-${{ env.BUILD_TIME }}-Image-only
-        path: 00001/${{ env.KERNEL_FILE }}
+        path: ${{ env.UPLOAD_DIR }}/${{ env.KERNEL_FILE }}
 
     - name: Upload Kernel Full (config, boot, modules)
       if: env.CHECK_FILE_IS_OK == 'true'
