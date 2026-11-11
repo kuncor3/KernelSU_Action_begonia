@@ -134,17 +134,16 @@ jobs:
         fi
 
         export PATH=$GITHUB_WORKSPACE/clang-android/bin:$GITHUB_WORKSPACE/gcc-android/bin:$PATH
+        #export PATH=${{ env.CLANG_PATH }}/bin:${{ env.GCC_PATH }}/bin:$PATH
         export ARCH=${{ env.ARCH }}
         export SUBARCH=${{ env.ARCH }}
         export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
         export KBUILD_BUILD_HOST=ubuntu
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
-        export DTC_EXT=dtc
 
         make -j$(nproc --all) \
          O=out ARCH=${{ env.ARCH }} \
          CC=clang \
-         LOCALVERSION=-perf \
          CLANG_TRIPLE=aarch64-linux-gnu- \
          CROSS_COMPILE=aarch64-linux-android- ${{ env.KERNEL_CONFIG }}
 
@@ -157,7 +156,6 @@ jobs:
         export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
         export KBUILD_BUILD_HOST=ubuntu
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
-        export DTC_EXT=dtc
         export CCACHE_DIR=~/.ccache
         export USE_CCACHE=1
 
