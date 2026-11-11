@@ -10,6 +10,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
     - name: Setup Configuration
       run: |
         echo "KERNEL_SOURCE=$(cat config.env | grep "KERNEL_SOURCE" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
@@ -17,84 +18,112 @@ jobs:
         echo "KERNEL_CONFIG=$(cat config.env | grep "KERNEL_CONFIG" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "ARCH=$(cat config.env | grep "ARCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "KERNEL_FILE=$(cat config.env | grep "KERNEL_FILE" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
-        echo "CLANG_VERSION=$(cat config.env | grep "CLANG_VERSION" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
-        echo "BUILD_EXTRA_COMMAND=$(cat config.env | grep "EXTRA_BUILD_COMMAND" | head -n 1 | cut -d ":" -f 2)" >> $GITHUB_ENV
+        echo "BUILD_EXTRA_COMMAND=$(cat config.env | grep "EXTRA_BUILD_COMMAND" | head -n 1 | cut -d ":" -f 2- | tr ':' ' ')" >> $GITHUB_ENV
         echo "DISABLE-LTO=$(cat config.env | grep "DISABLE-LTO" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
+        echo "APPLY_CUSTOM_PATCH=$(cat config.env | grep "APPLY_CUSTOM_PATCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "ENABLE_KERNELSU=$(cat config.env | grep "ENABLE_KERNELSU" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
-        echo "ADD_KPROBES_CONFIG=$(cat config.env | grep "ADD_KPROBES_CONFIG" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
-        echo "ADD_OVERLAYFS_CONFIG=$(cat config.env | grep "ADD_OVERLAYFS_CONFIG" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
-        echo "NEED_DTBO=$(cat config.env | grep "NEED_DTBO" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
-        echo "MAKE_BOOT_IMAGE=$(cat config.env | grep "MAKE_BOOT_IMAGE" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
-        echo "SOURCE_BOOT_IMAGE=$(cat config.env | grep "SOURCE_BOOT_IMAGE" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
-        echo "DISABLE_CC_WERROR=$(cat config.env | grep "DISABLE_CC_WERROR" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
-        echo "APPLY_KSU_PATCH=$(cat config.env | grep "APPLY_KSU_PATCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
-        echo "ANYKERNEL3=$(cat config.env | grep "ANYKERNEL3" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
+        echo "KERNELSU_SOURCE=$(cat config.env | grep "KERNELSU_SOURCE" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
+        echo "KERNELSU_REPO_NAME=$(cat config.env | grep "KERNELSU_SOURCE" | head -n 1 | cut -d "=" -f 2 | awk -F "/" '{print $NF}' | sed 's/.git$//')" >> $GITHUB_ENV
+        echo "KERNELSU_BRANCH=$(cat config.env | grep "KERNELSU_BRANCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
+        echo "ENABLE_SUSFS=$(cat config.env | grep "ENABLE_SUSFS" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
+        echo "ENABLE_NOMOUNT=$(cat config.env | grep "ENABLE_NOMOUNT" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
+        echo "NOMOUNT_BRANCH=$(cat config.env | grep "NOMOUNT_BRANCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
 
     - name: Setup build kernel environment
       run: |
         echo "BUILD_TIME=$(TZ=Asia/Jakarta date "+%Y%m%d%H%M")" >> $GITHUB_ENV
-        echo "DEVICE=$(echo ${{ env.KERNEL_CONFIG }} | sed 's!vendor/!!;s/_defconfig//;s/_user//;s/-perf//')" >> $GITHUB_ENV
+        echo "DEVICE=$(echo ${{ env.KERNEL_CONFIG }} | sed 's!vendor/!!;s/_defconfig//;s/_user//;s/-perf//' | awk -F "/" '{print $NF}')" >> $GITHUB_ENV
         sudo apt-get update
-        sudo apt-get install git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 libncurses6 libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python3 python3-dev swig python-is-python3 python2 texinfo binutils
+        sudo apt-get install git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 libncurses6 libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python3 python3-dev swig python-is-python3 python2 texinfo rng-tools
         mkdir -p $GITHUB_WORKSPACE/kernel_workspace
 
+    - name: Cache Clang Toolchain
+      uses: actions/cache@v4
+      id: cache-clang
+      with:
+        path: clang-android
+        key: clang-android-r416183b
+
     - name: Download Clang Toolchain
+      if: steps.cache-clang.outputs.cache-hit != 'true'
       run: |
         cd $GITHUB_WORKSPACE
         git clone https://github.com/dandelion64-Archives/clang-r353983c.git clang-android
-        echo "CLANG_PATH=$GITHUB_WORKSPACE/clang-android" >> $GITHUB_ENV
-        ./clang-android/bin/clang -v
+
+    - name: Cache GCC Toolchain
+      uses: actions/cache@v4
+      id: cache-gcc
+      with:
+        path: gcc-android
+        key: gcc-android-ndk-r23
 
     - name: Download GCC Toolchain
+      if: steps.cache-gcc.outputs.cache-hit != 'true'
       run: |
         cd $GITHUB_WORKSPACE
         git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9.git -b lineage-19.1 gcc-android
-        echo "GCC_PATH=$GITHUB_WORKSPACE/gcc-android" >> $GITHUB_ENV
-        ./gcc-android/bin/aarch64-linux-android-gcc -v
+
+    - name: Cache ccache
+      uses: actions/cache@v4
+      with:
+        path: ~/.ccache
+        key: ccache-${{ env.DEVICE }}-${{ github.sha }}
+        restore-keys: |
+          ccache-${{ env.DEVICE }}-
 
     - name: Download kernel source
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         git clone ${{ env.KERNEL_SOURCE }} -b ${{ env.KERNEL_SOURCE_BRANCH }} android-kernel --depth=1
+        cd android-kernel
+        KERNEL_VER=$(grep -E "(^VERSION|^PATCHLEVEL)" ./Makefile | awk '{print $NF}' | tr '\n' '.' | sed 's/\.$//')
+        echo "kernel version: $KERNEL_VER"
+        echo "KERNEL_VERSION=$KERNEL_VER" >> $GITHUB_ENV
 
-    - name: Setup KernelSU
+    - name: Setup ${{ env.KERNELSU_REPO_NAME }}
       if: env.ENABLE_KERNELSU == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        #curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s builtin
-        curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s v3.2.0-legacy
-        KSU_TYPE="ksun"
-        echo "UPLOADNAME=-$KSU_TYPE" >> $GITHUB_ENV
-        if [ ${{ env.ADD_KPROBES_CONFIG }} = true ]; then
-            echo "CONFIG_KPROBES=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-            echo "CONFIG_HAVE_KPROBES=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-            echo "CONFIG_KPROBE_EVENTS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        else
-            patch -p1 < $GITHUB_WORKSPACE/ksu_manual_hook.patch
-        fi
+        curl -LSs "https://raw.githubusercontent.com/Baka-SU/BakaSU/main/kernel/setup.sh" | bash
+        echo "UPLOADNAME=+${{ env.KERNELSU_REPO_NAME }}-${{ env.KERNELSU_BRANCH }}" >> $GITHUB_ENV
         echo "CONFIG_KSU=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        #echo "CONFIG_KSU_MANUAL_HOOK=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+
+        # Susfs setup
+        if [ ${{ env.ENABLE_SUSFS }} = true ]; then
+          git clone https://github.com/JackA1ltman/NonGKI_Kernel_Build_2nd.git
+          patch -p1 < ./NonGKI_Kernel_Build_2nd/Patches/Patch/susfs_patch_to_${{ env.KERNEL_VERSION }}.patch
+          bash ./NonGKI_Kernel_Build_2nd/Patches/susfs_inline_hook_patches.sh
+          echo "CONFIG_KSU_SUSFS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+          SUS_VER=$(grep 'SUSFS_VERSION' ./include/linux/susfs.h | awk '{print $NF}' | sed 's/"//g')
+          echo "WITH_SUSFS=+susfs-$SUS_VER" >> $GITHUB_ENV
+        else
+          echo "CONFIG_KSU_MANUAL_HOOK=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+          patch -p1 < $GITHUB_WORKSPACE/patch/manual_hook.patch
+        fi
 
     - name: Setup NoMount
+      if: env.ENABLE_NOMOUNT == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        git clone https://github.com/maxsteeel/nomount.git -b dev nomount
-        patch -p1 < ./nomount/kernel/patches/nomount_4.14_kernel_integration.patch
-        cp -v ./nomount/kernel/src/* ./fs/
+        curl https://raw.githubusercontent.com/maxsteeel/nomount/refs/heads/dev/kernel/setup.sh | bash -
         echo "CONFIG_NOMOUNT=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+        echo "WITH_NOMOUNT=+nomount" >> $GITHUB_ENV
 
     - name: Setup Configuration for Kernel
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        export PATH=${{ env.CLANG_PATH }}/bin:${{ env.GCC_PATH }}/bin:$PATH
-        export ARCH=${{ env.ARCH }}
-        export SUBARCH=${{ env.ARCH }}
-        export KBUILD_BUILD_HOST=ubuntu
-        export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
+        if [ ${{ env.APPLY_CUSTOM_PATCH }} = true ] && [ -f $GITHUB_WORKSPACE/patch/custom.patch ]; then
+           patch -p1 < $GITHUB_WORKSPACE/patch/custom.patch
+        fi
 
         if [ -f $GITHUB_WORKSPACE/extra_kernel_config ]; then
+          if [ ${{ env.DISABLE-LTO }} == true ]; then
+            echo "CONFIG_LTO=n" >> $GITHUB_WORKSPACE/extra_kernel_config
+            echo "CONFIG_LTO_CLANG=n" >> $GITHUB_WORKSPACE/extra_kernel_config
+          fi
           while IFS= read -r i || [ -n "$i" ]; do
             [ -z "$i" ] && continue
+            [[ "$i" =~ ^#.* ]] && continue
             f=$(echo "$i" | cut -d= -f1)
             if grep -q "^${f}=" arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}; then
               sed -i "s|^${f}=.*|$i|" arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
@@ -104,55 +133,47 @@ jobs:
           done < "$GITHUB_WORKSPACE/extra_kernel_config"
         fi
 
-        patch -p1 < $GITHUB_WORKSPACE/custom.patch
-        if [ ${{ env.ENABLE_KERNELSU }} != true ]; then
-            git restore kernel/module.c
-        fi
-
-        if [ ${{ env.DISABLE-LTO }} != true ]; then
-            echo "CONFIG_LTO=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-            echo "CONFIG_ARCH_SUPPORTS_LTO_CLANG=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-            echo "CONFIG_LTO_CLANG=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-            echo "BUILD_EXTRA_COMMAND=$(echo ${{ env.BUILD_EXTRA_COMMAND }} | sed "s/LD=[^ ]*/LD=aarch64-linux-android-ld.gold/")" >> $GITHUB_ENV
-        fi
+        export PATH=$GITHUB_WORKSPACE/clang-android/bin:$GITHUB_WORKSPACE/gcc-android/bin:$PATH
+        export ARCH=${{ env.ARCH }}
+        export SUBARCH=${{ env.ARCH }}
+        export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
+        export KBUILD_BUILD_HOST=ubuntu
+        export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
+        export DTC_EXT=dtc
 
         make -j$(nproc --all) \
          O=out ARCH=${{ env.ARCH }} \
          CC=clang \
+         LOCALVERSION=-perf \
          CLANG_TRIPLE=aarch64-linux-gnu- \
          CROSS_COMPILE=aarch64-linux-android- ${{ env.KERNEL_CONFIG }}
 
     - name: Build kernel
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        export PATH=${{ env.CLANG_PATH }}/bin:${{ env.GCC_PATH }}/bin:$PATH
+        export PATH=$GITHUB_WORKSPACE/clang-android/bin:$GITHUB_WORKSPACE/gcc-android/bin:$PATH
         export ARCH=${{ env.ARCH }}
         export SUBARCH=${{ env.ARCH }}
+        export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
         export KBUILD_BUILD_HOST=ubuntu
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
+        export DTC_EXT=dtc
+        export CCACHE_DIR=~/.ccache
+        export USE_CCACHE=1
 
         make -j$(nproc --all) \
-         O=out ARCH=arm64 \
-         CC=clang \
-         CROSS_COMPILE=aarch64-linux-android- \
-         CLANG_TRIPLE=aarch64-linux-gnu- savedefconfig
-
-        cp -f out/defconfig arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-
-          {
-           make -j$(nproc --all) \
-            O=out ARCH=${{ env.ARCH }} \
-            CC=clang \
-            CROSS_COMPILE=aarch64-linux-android- \
-            CLANG_TRIPLE=aarch64-linux-gnu- ${{ env.BUILD_EXTRA_COMMAND }}
-          } > >(tee build.log) 2>&1
+         O=out ARCH=${{ env.ARCH }} \
+         CC="ccache clang" \
+         LOCALVERSION=-perf \
+         CLANG_TRIPLE=aarch64-linux-gnu- \
+         CROSS_COMPILE=aarch64-linux-android- ${{ env.BUILD_EXTRA_COMMAND }} 2>&1 | tee $GITHUB_WORKSPACE/build.log
 
     - name: Check a kernel output files
       run: |
        cd $GITHUB_WORKSPACE/kernel_workspace
        if [ -f android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }} ]; then
            if [ -f android-kernel/out/arch/${{ env.ARCH }}/boot/Image ]; then
-               strings android-kernel/out/arch/${{ env.ARCH }}/boot/Image | grep -Ei "linux version [0-9].*"
+               strings android-kernel/out/arch/${{ env.ARCH }}/boot/Image | grep -Ei "linux version [0-9].*" || true
            fi
            echo "CHECK_FILE_IS_OK=true" >> $GITHUB_ENV
        else
@@ -161,45 +182,31 @@ jobs:
 
     - name: Prepare kernel files
       run: |
-        mkdir $GITHUB_WORKSPACE/kernel_workspace/image
-        cd $GITHUB_WORKSPACE/kernel_workspace/image
+        mkdir -p $GITHUB_WORKSPACE/00001
+        [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }} ] && \
+          cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }} $GITHUB_WORKSPACE/00001/
+        cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/.config $GITHUB_WORKSPACE/00001/kernel_configs.txt
+        cp -v $GITHUB_WORKSPACE/build.log $GITHUB_WORKSPACE/00001/
+        find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/certs -type f -name "signing_key.*" -exec cp -v {} $GITHUB_WORKSPACE/00001/ \; 2>/dev/null || true
+        find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out -type f -name "*.ko" -exec cp -v {} $GITHUB_WORKSPACE/00001/ \;
 
-        [ -d $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/certs ] && \
-          cp -rv $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/certs .
-
-        [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/build.log ] && \
-          cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/build.log .
-
-        find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot -maxdepth 1 -type f | while read file; do cp -v $file .; done
-
-        cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/.config kernel_configs.txt
-
-        find $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out -type f -name "*.ko" | while read file; do cp -rv $file .; done
-
-        if [ ${{ env.ANYKERNEL3 }} = true ]; then
-            cd $GITHUB_WORKSPACE/kernel_workspace
-            git clone https://github.com/osm0sis/AnyKernel3
-            sed -i 's/do.devicecheck=1/do.devicecheck=0/g' AnyKernel3/anykernel.sh
-            sed -i 's!block=/dev/block/by-name/boot;!block=auto;!g' AnyKernel3/anykernel.sh
-            sed -i 's/is_slot_device=0;/is_slot_device=auto;/g' AnyKernel3/anykernel.sh
-            if [ ${{ env.CHECK_FILE_IS_OK }} = true ]; then
-                cp android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }} AnyKernel3/
-            fi
-            rm -rf AnyKernel3/.git* AnyKernel3/README.md
-            echo "CHECK_ANYKERNEL3_ENABLED=true" >> $GITHUB_ENV
-        fi
-
-    - name: Upload Kernel Files
+    - name: Upload Kernel Image only
       if: env.CHECK_FILE_IS_OK == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: Kernel${{ env.UPLOADNAME }}-${{ env.DEVICE }}-${{ env.BUILD_TIME }}
-        path: kernel_workspace/image/*
+        name: ${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}-${{ env.BUILD_TIME }}-Image-only
+        path: 00001/${{ env.KERNEL_FILE }}
 
-    - name: Upload AnyKernel3
-      if: env.CHECK_ANYKERNEL3_ENABLED == 'true'
+    - name: Upload Kernel Full (config, boot, modules)
+      if: env.CHECK_FILE_IS_OK == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: AnyKernel3${{ env.UPLOADNAME }}-${{ env.DEVICE }}-${{ env.BUILD_TIME }}
-        path: kernel_workspace/AnyKernel3/*
+        name: ${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}-${{ env.BUILD_TIME }}-full
+        path: 00001/
 
+    - name: Upload build log
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-log-${{ env.BUILD_TIME }}
+        path: build.log
