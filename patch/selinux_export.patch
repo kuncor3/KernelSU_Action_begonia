@@ -1,0 +1,89 @@
+diff --git a/security/selinux/selinuxfs.c b/security/selinux/selinuxfs.c
+index 00eed842c491..f36e8da63720 100644
+--- a/security/selinux/selinuxfs.c
++++ b/security/selinux/selinuxfs.c
+@@ -52,7 +52,7 @@ static int __init checkreqprot_setup(char *str)
+ }
+ __setup("checkreqprot=", checkreqprot_setup);
+ 
+-static DEFINE_MUTEX(sel_mutex);
++DEFINE_MUTEX(sel_mutex);
+ 
+ /* global data for booleans */
+ static struct dentry *bool_dir;
+@@ -236,7 +236,7 @@ static int sel_mmap_handle_status(struct file *filp,
+ 			       size, vma->vm_page_prot);
+ }
+ 
+-static const struct file_operations sel_handle_status_ops = {
++const struct file_operations sel_handle_status_ops = {
+ 	.open		= sel_open_handle_status,
+ 	.read		= sel_read_handle_status,
+ 	.mmap		= sel_mmap_handle_status,
+@@ -710,7 +710,7 @@ static ssize_t sel_write_relabel(struct file *file, char *buf, size_t size);
+ static ssize_t sel_write_user(struct file *file, char *buf, size_t size);
+ static ssize_t sel_write_member(struct file *file, char *buf, size_t size);
+ 
+-static ssize_t (*write_op[])(struct file *, char *, size_t) = {
++ssize_t (*write_op[])(struct file *, char *, size_t) = {
+ 	[SEL_ACCESS] = sel_write_access,
+ 	[SEL_CREATE] = sel_write_create,
+ 	[SEL_RELABEL] = sel_write_relabel,
+diff --git a/security/selinux/ss/services.c b/security/selinux/ss/services.c
+index b275743e23cc..8229ca2ef04e 100644
+--- a/security/selinux/ss/services.c
++++ b/security/selinux/ss/services.c
+@@ -87,9 +87,9 @@ int selinux_policycap_alwaysnetwork;
+ int selinux_policycap_cgroupseclabel;
+ int selinux_policycap_nnp_nosuid_transition;
+ 
+-static DEFINE_RWLOCK(policy_rwlock);
++DEFINE_RWLOCK(policy_rwlock);
+ 
+-static struct sidtab sidtab;
++struct sidtab sidtab;
+ struct policydb policydb;
+ int ss_initialized;
+ 
+@@ -105,7 +105,7 @@ static u32 latest_granting;
+ static int context_struct_to_string(struct context *context, char **scontext,
+ 				    u32 *scontext_len);
+ 
+-static void context_struct_compute_av(struct context *scontext,
++void context_struct_compute_av(struct context *scontext,
+ 					struct context *tcontext,
+ 					u16 tclass,
+ 					struct av_decision *avd,
+@@ -472,7 +472,7 @@ static int dump_masked_av_helper(void *k, void *d, void *args)
+ 	return 0;
+ }
+ 
+-static void security_dump_masked_av(struct context *scontext,
++void security_dump_masked_av(struct context *scontext,
+ 				    struct context *tcontext,
+ 				    u16 tclass,
+ 				    u32 permissions,
+@@ -632,7 +632,7 @@ void services_compute_xperms_drivers(
+  * Compute access vectors and extended permissions based on a context
+  * structure pair for the permissions in a particular class.
+  */
+-static void context_struct_compute_av(struct context *scontext,
++void context_struct_compute_av(struct context *scontext,
+ 					struct context *tcontext,
+ 					u16 tclass,
+ 					struct av_decision *avd,
+diff --git a/security/selinux/ss/status.c b/security/selinux/ss/status.c
+index d982365f9d1a..56ca9747d149 100644
+--- a/security/selinux/ss/status.c
++++ b/security/selinux/ss/status.c
+@@ -35,8 +35,8 @@
+  * In most cases, application shall confirm the kernel status is not
+  * changed without any system call invocations.
+  */
+-static struct page *selinux_status_page;
+-static DEFINE_MUTEX(selinux_status_lock);
++struct page *selinux_status_page;
++DEFINE_MUTEX(selinux_status_lock);
+ 
+ /*
+  * selinux_kernel_status_page

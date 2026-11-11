@@ -87,11 +87,26 @@ jobs:
         curl -LSs "https://raw.githubusercontent.com/Baka-SU/BakaSU/main/kernel/setup.sh" | bash
         echo "UPLOADNAME=+${{ env.KERNELSU_REPO_NAME }}-${{ env.KERNELSU_BRANCH }}" >> $GITHUB_ENV
         echo "CONFIG_KSU=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+        # BakaSU wajib punya simbol SELinux ini saat CONFIG_KALLSYMS_ALL tidak aktif,
+        # baik untuk mode manual hook maupun SUSFS.
+        patch -p1 < $GITHUB_WORKSPACE/patch/selinux_export.patch
 
         # Susfs setup
         if [ ${{ env.ENABLE_SUSFS }} = true ]; then
+          # Pin ke commit yang sama dengan saat patch perbaikan kita dibuat.
           git clone https://github.com/JackA1ltman/NonGKI_Kernel_Build_2nd.git
-          patch -p1 < ./NonGKI_Kernel_Build_2nd/Patches/Patch/susfs_patch_to_${{ env.KERNEL_VERSION }}.patch
+          cd NonGKI_Kernel_Build_2nd
+          git checkout -q 4b0766bdf5d568b695dfbb19994788f14c636f2b
+          cd ..
+
+          # Patch SUSFS upstream dibuat untuk 4.14 versi lain, jadi 4 hunk memang ditolak.
+          # Sisa yang gagal ditambal oleh patch/susfs_4.14_nokia_fix.patch.
+          patch -p1 --forward < ./NonGKI_Kernel_Build_2nd/Patches/Patch/susfs_patch_to_${{ env.KERNEL_VERSION }}.patch || true
+          test "$(find . -name '*.rej' | wc -l)" -eq 4 || { echo "Jumlah reject tidak sesuai (harus 4), cek log patch SUSFS"; exit 1; }
+          patch -p1 < $GITHUB_WORKSPACE/patch/susfs_4.14_nokia_fix.patch
+          find . -name '*.rej' -delete
+          find . -name '*.orig' -delete
+
           bash ./NonGKI_Kernel_Build_2nd/Patches/susfs_inline_hook_patches.sh
           echo "CONFIG_KSU_SUSFS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
           SUS_VER=$(grep 'SUSFS_VERSION' ./include/linux/susfs.h | awk '{print $NF}' | sed 's/"//g')

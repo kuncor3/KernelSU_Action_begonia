@@ -1,0 +1,111 @@
+diff --git a/fs/readdir.c b/fs/readdir.c
+--- a/fs/readdir.c
++++ b/fs/readdir.c
+@@ -220,6 +220,9 @@
+ 	unsigned long d_ino;
+ 	int reclen = ALIGN(offsetof(struct linux_dirent, d_name) + namlen + 2,
+ 		sizeof(long));
++#ifdef CONFIG_KSU_SUSFS_SUS_PATH
++	struct inode *inode;
++#endif
+ 
+ 	buf->error = -EINVAL;	/* only used if we fail.. */
+ 	if (reclen > buf->count)
+diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
+--- a/fs/proc/task_mmu.c
++++ b/fs/proc/task_mmu.c
+@@ -19,6 +19,9 @@
+ #include <linux/shmem_fs.h>
+ #include <linux/uaccess.h>
+ #include <linux/mm_inline.h>
++#if defined(CONFIG_KSU_SUSFS_SUS_KSTAT) || defined(CONFIG_KSU_SUSFS_SUS_MAP) || defined(CONFIG_KSU_SUSFS_OPEN_REDIRECT)
++#include <linux/susfs_def.h>
++#endif
+ 
+ #include <asm/elf.h>
+ #include <asm/tlb.h>
+diff --git a/fs/notify/fdinfo.c b/fs/notify/fdinfo.c
+--- a/fs/notify/fdinfo.c
++++ b/fs/notify/fdinfo.c
+@@ -113,6 +113,60 @@
+ 		 * used only internally to the kernel.
+ 		 */
+ 		u32 mask = mark->mask & IN_ALL_EVENTS;
++#ifdef CONFIG_KSU_SUSFS_SUS_KSTAT
++		if (susfs_is_current_app_uid()) {
++			bool is_fuse = false;
++			if (susfs_is_inode_sus_kstat(inode, &is_fuse)) {
++				unsigned long ino = inode->i_ino;
++				dev_t dev = inode->i_sb->s_dev;
++				susfs_sus_kstat_spoof_inotify_fdinfo(&ino, &dev);
++				seq_printf(m, "inotify wd:%x ino:%lx sdev:%x mask:%x ignored_mask:%x ",
++						inode_mark->wd, ino, dev,
++						mark->mask & IN_ALL_EVENTS, mark->ignored_mask);
++				show_mark_fhandle(m, inode);
++				seq_putc(m, '\n');
++				iput(inode);
++				return;
++			}
++		}
++#endif // #ifdef CONFIG_KSU_SUSFS_SUS_KSTAT
++#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
++		if (likely(susfs_is_current_proc_umounted())) {
++			struct mount *mnt = real_mount(file->f_path.mnt);
++			if (mnt->mnt_id >= DEFAULT_KSU_MNT_ID) {
++				struct path path;
++				char *pathname = kmalloc(PAGE_SIZE, GFP_KERNEL);
++				char *dpath;
++				if (!pathname) {
++					goto orig_flow;
++				}
++				dpath = d_path(&file->f_path, pathname, PAGE_SIZE);
++				if (!dpath) {
++					goto out_kfree;
++				}
++				if (kern_path(dpath, 0, &path)) {
++					goto out_kfree;
++				}
++				if (!d_backing_inode(path.dentry)) {
++					goto out_path_put;
++				}
++				seq_printf(m, "inotify wd:%x ino:%lx sdev:%x mask:%x ignored_mask:%x ",
++						inode_mark->wd, d_backing_inode(path.dentry)->i_ino, d_backing_inode(path.dentry)->i_sb->s_dev,
++						mark->mask & IN_ALL_EVENTS, mark->ignored_mask);
++				show_mark_fhandle(m, d_backing_inode(path.dentry));
++				seq_putc(m, '\n');
++				path_put(&path);
++				kfree(pathname);
++				iput(inode);
++				return;
++out_path_put:
++				path_put(&path);
++out_kfree:
++				kfree(pathname);
++			}
++		}
++orig_flow:
++#endif // #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
+ 		seq_printf(m, "inotify wd:%x ino:%lx sdev:%x mask:%x ignored_mask:%x ",
+ 			   inode_mark->wd, inode->i_ino, inode->i_sb->s_dev,
+ 			   mask, mark->ignored_mask);
+diff --git a/security/selinux/avc.c b/security/selinux/avc.c
+--- a/security/selinux/avc.c
++++ b/security/selinux/avc.c
+@@ -163,6 +163,17 @@
+ 	}
+ 
+ 	rc = security_sid_to_context(tsid, &scontext, &scontext_len);
++#ifdef CONFIG_KSU_SUSFS
++	if (static_branch_likely(&susfs_is_avc_log_spoofing_enabled)) {
++		if (unlikely(tsid == susfs_ksu_sid)) {
++			if (rc)
++				audit_log_format(ab, " tsid=%d", susfs_priv_app_sid);
++			else
++				audit_log_format(ab, " tcontext=%s", "u:r:priv_app:s0:c512,c768");
++			goto bypass_orig_flow;
++		}
++	}
++#endif
+ 	if (rc)
+ 		audit_log_format(ab, " tsid=%d", tsid);
+ 	else {
