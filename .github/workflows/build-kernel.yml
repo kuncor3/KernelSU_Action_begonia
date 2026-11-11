@@ -196,7 +196,7 @@ jobs:
     - name: Prepare kernel files
       run: |
         mkdir -p $GITHUB_WORKSPACE/00001/${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}-${{ env.BUILD_TIME }}
-        echo UPLOAD_DIR=$GITHUB_WORKSPACE/00001/${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}-${{ env.BUILD_TIME }} >> $GITHUB_ENV
+        echo "UPLOAD_DIR=$GITHUB_WORKSPACE/00001/${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}-${{ env.BUILD_TIME }}" >> $GITHUB_ENV
         [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }} ] && \
           cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }} ${{ env.UPLOAD_DIR }}/
         cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/.config ${{ env.UPLOAD_DIR }}/kernel_configs.txt
