@@ -178,11 +178,9 @@ jobs:
     - name: Apply Lineage Hide kernel patch
       if: env.ENABLE_LINEAGE_HIDE == 'true'
       run: |
-        cd $GITHUB_WORKSPACE
-        git clone --depth=1 ${{ env.LINEAGE_HIDE_SOURCE }} -b ${{ env.LINEAGE_HIDE_BRANCH }} Lineage_Hide
-        bash Lineage_Hide/scripts/patch-kernel.sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        bash Lineage_Hide/scripts/selinux_hide_patch.sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        bash Lineage_Hide/scripts/patch-kernel.sh --check $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        bash $GITHUB_WORKSPACE/patch/Lineage_Hide/scripts/patch-kernel.sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        bash $GITHUB_WORKSPACE/patch/Lineage_Hide/scripts/selinux_hide_patch.sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        bash $GITHUB_WORKSPACE/patch/Lineage_Hide/scripts/patch-kernel.sh --check $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         echo "WITH_LINEAGE_HIDE=+lh" >> $GITHUB_ENV
 
     - name: Build kernel
