@@ -196,8 +196,8 @@ jobs:
     - name: Prepare kernel files
       run: |
         mkdir -pv $GITHUB_WORKSPACE/00001/${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}-${{ env.BUILD_TIME }}
-        echo "UPLOAD_DIR=$GITHUB_WORKSPACE/00001/${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}-${{ env.BUILD_TIME }}" >> $GITHUB_ENV
-        echo "${{ env.UPLOAD_DIR }}"
+        UPLOAD_DIR=$GITHUB_WORKSPACE/00001/${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}-${{ env.BUILD_TIME }}
+        echo "$UPLOAD_DIR"
         [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }} ] && \
           cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_FILE }} $GITHUB_WORKSPACE/00001/${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}-${{ env.BUILD_TIME }}
         cp -v $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/.config $GITHUB_WORKSPACE/00001/${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}-${{ env.BUILD_TIME }}/kernel_configs.txt
@@ -210,7 +210,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}-${{ env.BUILD_TIME }}-Image-only
-        path: $GITHUB_WORKSPACE/00001/${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}-${{ env.BUILD_TIME }}/${{ env.KERNEL_FILE }}
+        path: 00001/${{ env.KERNEL_FILE }}-${{ env.DEVICE }}${{ env.UPLOADNAME }}${{ env.WITH_SUSFS }}${{ env.WITH_NOMOUNT }}-${{ env.BUILD_TIME }}/${{ env.KERNEL_FILE }}
 
     - name: Upload Kernel Full (config, boot, modules)
       if: env.CHECK_FILE_IS_OK == 'true'
