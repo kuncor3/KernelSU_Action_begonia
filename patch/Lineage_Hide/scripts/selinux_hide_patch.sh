@@ -92,6 +92,7 @@ KDIR = sys.argv[2].rstrip("/")
 # drivers/kernelsu.
 CANDIDATES = [
     os.path.join(KDIR, "KernelSU/kernel/feature/selinux_hide.c"),
+    os.path.join(KDIR, "KernelSU/kernel/feature/selinux_hide/selinux_hide.c"),
     os.path.join(KDIR, "kernel/feature/selinux_hide.c"),
     os.path.join(KDIR, "drivers/kernelsu/feature/selinux_hide.c"),
 ]
