@@ -3,7 +3,8 @@
 #
 # selinux_hide_patch.sh - block privileged SELinux context probes from
 # application UIDs in KernelSU's selinux_hide feature
-# (kernel/feature/selinux_hide.c).
+# (kernel/feature/selinux_hide/selinux_hide_auto.c; older KernelSU trees keep
+# the same code in kernel/feature/selinux_hide.c).
 #
 # The change adds three guards that make the backup-policy fallback refuse
 # to answer for privileged domains, so an app (uid >= 10000) cannot deduce
@@ -22,7 +23,7 @@
 #
 # <tree> is either the kernel source root (KernelSU is cloned at
 # <tree>/KernelSU and symlinked as drivers/kernelsu) or the KernelSU repo
-# root itself (<tree>/kernel/feature/selinux_hide.c).
+# root itself (<tree>/kernel/feature/selinux_hide/).
 set -euo pipefail
 
 usage() {
@@ -34,7 +35,7 @@ Usage: selinux_hide_patch.sh [--check|--revert] <tree>
   --revert     remove the guards again
 
 <tree> is the kernel source root (contains KernelSU/) or the KernelSU repo
-root (contains kernel/feature/selinux_hide.c).
+root (contains kernel/feature/selinux_hide/).
 
 Examples:
   scripts/selinux_hide_patch.sh /path/to/kernel
@@ -89,10 +90,13 @@ KDIR = sys.argv[2].rstrip("/")
 
 # The KernelSU source can be given directly (repo root) or found inside the
 # kernel tree, where setup.sh clones it as KernelSU/ and symlinks it into
-# drivers/kernelsu.
+# drivers/kernelsu.  Newer KernelSU splits the feature into a directory; the
+# guarded functions live in the auto-hook part.  Older trees keep one file.
 CANDIDATES = [
+    os.path.join(KDIR, "KernelSU/kernel/feature/selinux_hide/selinux_hide_auto.c"),
+    os.path.join(KDIR, "kernel/feature/selinux_hide/selinux_hide_auto.c"),
+    os.path.join(KDIR, "drivers/kernelsu/feature/selinux_hide/selinux_hide_auto.c"),
     os.path.join(KDIR, "KernelSU/kernel/feature/selinux_hide.c"),
-    os.path.join(KDIR, "KernelSU/kernel/feature/selinux_hide/selinux_hide.c"),
     os.path.join(KDIR, "kernel/feature/selinux_hide.c"),
     os.path.join(KDIR, "drivers/kernelsu/feature/selinux_hide.c"),
 ]
@@ -104,7 +108,7 @@ for path in CANDIDATES:
         break
 if TARGET is None:
     print(
-        "error: selinux_hide.c not found under '%s'\n"
+        "error: selinux_hide source not found under '%s'\n"
         "       pass the kernel root (with KernelSU/) or the KernelSU repo root" % KDIR,
         file=sys.stderr,
     )
